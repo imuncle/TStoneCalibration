@@ -902,6 +902,7 @@ void StereoRectify::ReadXml(QString path)
 //    cv::cvtColor(img_2, img_2, CV_BGR2GRAY);
 
 //    disparity_image = cv::Mat::zeros(img_1.size(), CV_8UC1);
+//    depth_image = cv::Mat::zeros(img_1.size(), CV_8UC1);
 //    cv::Mat disp = cv::Mat::zeros(img_1.size(), CV_8UC1);
 
 //    int dim[3] = {img_1.size().width, img_1.size().height, img_1.size().width};
@@ -914,21 +915,25 @@ void StereoRectify::ReadXml(QString path)
 //    elas.process(img_1.data, img_2.data, D1_data, D2_data, dim);
 //    // find maximum disparity for scaling output disparity images to [0..255]
 //    float disp_max = 0;
+//    float disp_min = img_1.cols;
 //    for (int32_t i=0; i<img_1.size().width*img_1.size().height; i++) {
 //        if (D1_data[i]>disp_max) disp_max = D1_data[i];
-//        if (D2_data[i]>disp_max) disp_max = D2_data[i];
+//        if (D1_data[i]>0 && D1_data[i]<disp_min) disp_min = D1_data[i];
 //    }
-
+//    float depth_max = Q.at<double>(2,3)/(Q.at<double>(3,2)*disp_min+Q.at<double>(3,3));
 //    for (int i = 0; i < img_1.size().width; i++) {
 //        for (int j = 0; j < img_1.size().height; j++) {
 //            disp.at<uchar>(j,i) = (uint8_t)std::max(255.0*D1_data[i+j*img_1.size().width]/disp_max,0.0);
 //            disparity_image.at<uchar>(j, i) = D1_data[i+j*img_1.size().width];
+//            double distance = Q.at<double>(2,3)/(Q.at<double>(3,2)*D1_data[i+j*img_1.cols]+Q.at<double>(3,3));
+//            depth_image.at<uchar>(j, i) = (uint8_t)std::max(255.0*distance/depth_max,0.0);
 //        }
 //    }
 //    // free memory
 //    free(D1_data);
 //    free(D2_data);
 //    showImg(disparity_img, disp);
+//    showImg(depth_img, depth_image);
 }
 
 QImage StereoRectify::Mat2QImage(cv::Mat cvImg)
@@ -1038,8 +1043,10 @@ void StereoRectify::nextFrame()
     cv::cvtColor(left_image, left_image, CV_BGR2GRAY);
     cv::cvtColor(right_image, right_image, CV_BGR2GRAY);
 
-    disparity_image = cv::Mat::zeros(left_image.size(), CV_8UC1);
+    disparity_image = cv::Mat::zeros(left_image.size(), CV_32FC1);
+    depth_image = cv::Mat::zeros(left_image.size(), CV_32FC1);
     cv::Mat disp = cv::Mat::zeros(left_image.size(), CV_8UC1);
+    cv::Mat depth = cv::Mat::zeros(left_image.size(), CV_8UC1);
 
     int dim[3] = {left_image.cols, left_image.rows, left_image.cols};
     float* D1_data = (float*)malloc(left_image.cols*left_image.rows*sizeof(float));
@@ -1051,19 +1058,23 @@ void StereoRectify::nextFrame()
     elas.process(left_image.data, right_image.data, D1_data, D2_data, dim);
     // find maximum disparity for scaling output disparity images to [0..255]
     float disp_max = 0;
+    float disp_min = left_image.cols;
     for (int32_t i=0; i<left_image.cols*left_image.rows; i++) {
         if (D1_data[i]>disp_max) disp_max = D1_data[i];
-        if (D2_data[i]>disp_max) disp_max = D2_data[i];
+        if (D1_data[i]>0 && D1_data[i]<disp_min) disp_min = D1_data[i];
     }
-
+    float depth_max = Q.at<double>(2,3)/(Q.at<double>(3,2)*disp_min+Q.at<double>(3,3));
     for (int i = 0; i < left_image.cols; i++) {
         for (int j = 0; j < left_image.rows; j++) {
             disp.at<uchar>(j,i) = (uint8_t)std::max(255.0*D1_data[i+j*left_image.cols]/disp_max,0.0);
-            disparity_image.at<uchar>(j, i) = D1_data[i+j*left_image.cols];
+            disparity_image.at<double>(j, i) = D1_data[i+j*left_image.cols];
+            depth_image.at<double>(j, i) = std::max(Q.at<double>(2,3)/(Q.at<double>(3,2)*D1_data[i+j*left_image.cols]+Q.at<double>(3,3)),0.0);
+            depth.at<uchar>(j, i) = (uint8_t)std::max(255.0*depth_image.at<double>(j, i)/depth_max,0.0);
         }
     }
     // free memory
     free(D1_data);
     free(D2_data);
     showImg(disparity_img, disp);
+    showImg(depth_img, depth);
 }
