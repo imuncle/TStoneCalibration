@@ -39,7 +39,8 @@ public:
     bool getInnerMatrix();
     void setWidth(int width);
     void setHeight(int height);
-    void setSideLen(int side);
+    void setSideLen(double side);
+    void showImg(cv::Mat img);
 
 private slots:
     void chooseDir();
@@ -75,8 +76,56 @@ private:
     bool get_inner;
     bool correct_img;
     int save_img_id;
-    int corner_width, corner_height, corner_side;
+    int corner_width, corner_height;
+    double corner_side;
     bool camera_opened;
+};
+
+class StereoRectify : public QMainWindow
+{
+    Q_OBJECT
+public:
+    StereoRectify(QPushButton* start,
+                  QPushButton* stop,
+                  QPushButton* dir,
+                  QLineEdit* text,
+                  QComboBox* left,
+                  QComboBox* right,
+                  QLabel* left_,
+                  QLabel* right_,
+                  QLabel* disparity,
+                  QLabel* depth);
+    ~StereoRectify();
+    void setCameraNum(int num);
+
+private slots:
+    void choose_dir();
+    void choose_camera_left(int id);
+    void choose_camera_right(int id);
+    void start();
+    void stop();
+    void nextFrame();
+
+private:
+    void ReadXml(QString path);
+    void showImg(QLabel* img_view, cv::Mat img);
+    QImage Mat2QImage(cv::Mat cvImg);
+    QTimer* timer;
+    QPushButton* start_button;
+    QPushButton* stop_button;
+    QPushButton* dir_choose;
+    QLineEdit* dir_text;
+    QComboBox* left_choose;
+    QComboBox* right_choose;
+    QLabel* left_img;
+    QLabel* right_img;
+    QLabel* disparity_img;
+    QLabel* depth_img;
+    cv::Mat left_mapx, left_mapy, right_mapx, right_mapy, Q;
+    int current_left_camera, current_right_camera;
+    cv::VideoCapture left_capture, right_capture;
+    cv::Mat left_image, right_image, disparity_image, depth_image;
+    cv::Ptr<cv::StereoSGBM> sgbm;
 };
 
 class MainWindow : public QMainWindow
@@ -94,16 +143,18 @@ private slots:
     void calibration();
     void widthChange(int width);
     void heightChange(int height);
-    void sideChange(int side);
+    void sideChange(double side);
 
 private:
     Ui::MainWindow *ui;
     Camera* camera_1;
     Camera* camera_2;
+    StereoRectify* stereo;
     QComboBox* choose_mode;
     cv::VideoCapture capture;
     QString mode;
-    int corner_width, corner_height, corner_side;
+    int corner_width, corner_height;
+    double corner_side;
 };
 
 #endif // MAINWINDOW_H
