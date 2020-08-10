@@ -1,10 +1,7 @@
 # camera_calibration
-单目/双目相机标定程序
+相机标定程序
 
-项目基于Qt 5和OpenCV 3开发，主要功能如下：
+目前已完成角点检测功能，代码逻辑见[基于生长的棋盘格角点检测](https://github.com/imuncle/imuncle.github.io/issues/113)
 
-* 单目标定，输出相机内参和重投影误差
-* 双目标定，输出相机的外参和图像重投影矩阵
-
-程序截图：
-[ScreenShot](screenshot.jpg)
+角点检测效果：
+[CornerDetect](result.png)
