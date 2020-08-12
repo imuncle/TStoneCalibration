@@ -4,11 +4,11 @@ std::vector<cv::Mat> chessboardsFromCorners(struct Corner_t corners)
 {
 	std::cout << "Structure recovery ..." << std::endl;
 	std::vector<cv::Mat> chessboards;
-	cv::Mat chessboard = cv::Mat::zeros(cv::Size(3, 3), CV_8U);
+	cv::Mat chessboard = cv::Mat::zeros(cv::Size(3, 3), CV_16U);
 	for (int i = 0; i < corners.p.size(); i++)
 	{
 		chessboard = initChessboard(corners, i);
-		if (chessboard.at<uchar>(0, 0) == 0 && chessboard.at<uchar>(0, 1) == 0)
+		if (chessboard.at<uint16_t>(0, 0) == 0 && chessboard.at<uint16_t>(0, 1) == 0)
 			continue;
 		if (chessboardEnergy(chessboard, corners) > 0)
 			continue;
@@ -37,12 +37,12 @@ std::vector<cv::Mat> chessboardsFromCorners(struct Corner_t corners)
 				overlap.resize(chessboards.size());
 				for (int j = 0; j < chessboards.size(); j++)
 				{
-					auto ptr = chessboards[j].begin<uchar>();
+					auto ptr = chessboards[j].begin<uint16_t>();
 					for (int k = 0; k < chessboards[j].rows*chessboards[j].cols; k++)
 					{
-						auto ret = std::find(chessboard.begin<uchar>(), chessboard.end<uchar>(), (*ptr));
+						auto ret = std::find(chessboard.begin<uint16_t>(), chessboard.end<uint16_t>(), (*ptr));
 						ptr++;
-						if (ret != chessboard.end<uchar>())
+						if (ret != chessboard.end<uint16_t>())
 						{
 							overlap[j].x = 1;
 							overlap[j].y = chessboardEnergy(chessboards[j], corners);
@@ -81,65 +81,52 @@ std::vector<cv::Mat> chessboardsFromCorners(struct Corner_t corners)
 			}
 		}
 	}
-	/*for (int i = 0; i < chessboards.size(); i++)
-	{
-		cv::Mat chess = chessboards[i];
-		cv::Mat new_chess = cv::Mat::zeros(cv::Size(chess.rows, chess.cols), CV_8U);
-		for (int j = 0; j < new_chess.rows; j++)
-		{
-			for (int k = 0; k < new_chess.cols; k++)
-			{
-				new_chess.at<uchar>(j, k) = chess.at<uchar>(chess.rows-k-1, j);
-			}
-		}
-		chessboards[i] = new_chess;
-	}*/
 	std::cout << "Done" << std::endl;
 	return chessboards;
 }
 
 cv::Mat initChessboard(struct Corner_t corners, int idx)
 {
-	cv::Mat chessboard = cv::Mat::zeros(cv::Size(3, 3), CV_8U);
+	cv::Mat chessboard = cv::Mat::zeros(cv::Size(3, 3), CV_16U);
 	if (corners.p.size() < 9)
 		return chessboard;
 	cv::Point2f v1 = corners.v1[idx];
 	cv::Point2f v2 = corners.v2[idx];
 	cv::Point2f minus_v1 = cv::Point2f(-corners.v1[idx].x, -corners.v1[idx].y);
 	cv::Point2f minus_v2 = cv::Point2f(-corners.v2[idx].x, -corners.v2[idx].y);
-	chessboard.at<uchar>(1, 1) = idx;
+	chessboard.at<uint16_t>(1, 1) = idx;
 	float dist1[2] = { 0 };
 	float dist2[6] = { 0 };
 	int neighbor_idx = 0;
 	// find left/right/top/bottom neighbors
 	directionalNeighbor(idx, v1, chessboard, corners, &neighbor_idx, &dist1[0]);
-	chessboard.at<uchar>(1, 2) = neighbor_idx;
+	chessboard.at<uint16_t>(1, 2) = neighbor_idx;
 	directionalNeighbor(idx, minus_v1, chessboard, corners, &neighbor_idx, &dist1[1]);
-	chessboard.at<uchar>(1, 0) = neighbor_idx;
+	chessboard.at<uint16_t>(1, 0) = neighbor_idx;
 	directionalNeighbor(idx, v2, chessboard, corners, &neighbor_idx, &dist2[0]);
-	chessboard.at<uchar>(2, 1) = neighbor_idx;
+	chessboard.at<uint16_t>(2, 1) = neighbor_idx;
 	directionalNeighbor(idx, minus_v2, chessboard, corners, &neighbor_idx, &dist2[1]);
-	chessboard.at<uchar>(0, 1) = neighbor_idx;
+	chessboard.at<uint16_t>(0, 1) = neighbor_idx;
 	// find top-left/top-right/bottom-left/bottom-right neighbors
-	directionalNeighbor(chessboard.at<uchar>(1, 0), minus_v2, chessboard, corners, &neighbor_idx, &dist2[2]);
-	chessboard.at<uchar>(0, 0) = neighbor_idx;
-	directionalNeighbor(chessboard.at<uchar>(1, 0), v2, chessboard, corners, &neighbor_idx, &dist2[3]);
-	chessboard.at<uchar>(2, 0) = neighbor_idx;
-	directionalNeighbor(chessboard.at<uchar>(1, 2), minus_v2, chessboard, corners, &neighbor_idx, &dist2[4]);
-	chessboard.at<uchar>(0, 2) = neighbor_idx;
-	directionalNeighbor(chessboard.at<uchar>(1, 2), v2, chessboard, corners, &neighbor_idx, &dist2[5]);
-	chessboard.at<uchar>(2, 2) = neighbor_idx;
+	directionalNeighbor(chessboard.at<uint16_t>(1, 0), minus_v2, chessboard, corners, &neighbor_idx, &dist2[2]);
+	chessboard.at<uint16_t>(0, 0) = neighbor_idx;
+	directionalNeighbor(chessboard.at<uint16_t>(1, 0), v2, chessboard, corners, &neighbor_idx, &dist2[3]);
+	chessboard.at<uint16_t>(2, 0) = neighbor_idx;
+	directionalNeighbor(chessboard.at<uint16_t>(1, 2), minus_v2, chessboard, corners, &neighbor_idx, &dist2[4]);
+	chessboard.at<uint16_t>(0, 2) = neighbor_idx;
+	directionalNeighbor(chessboard.at<uint16_t>(1, 2), v2, chessboard, corners, &neighbor_idx, &dist2[5]);
+	chessboard.at<uint16_t>(2, 2) = neighbor_idx;
 	float ave_1 = average(dist1, 2);
 	float std_1 = stdd(dist1, 2, ave_1);
 	if (std_1 / ave_1 > 0.3)
 	{
-		return cv::Mat::zeros(cv::Size(3, 3), CV_8U);
+		return cv::Mat::zeros(cv::Size(3, 3), CV_16U);
 	}
 	float ave_2 = average(dist2, 6);
 	float std_2 = stdd(dist2, 6, ave_2);
 	if (std_2 / ave_2 > 0.3)
 	{
-		return cv::Mat::zeros(cv::Size(3, 3), CV_8U);
+		return cv::Mat::zeros(cv::Size(3, 3), CV_16U);
 	}
 	return chessboard;
 }
@@ -177,9 +164,9 @@ void directionalNeighbor(int idx, cv::Point2f v, cv::Mat chessboard, struct Corn
 	{
 		for (int j = 0; j < chessboard.cols; j++)
 		{
-			if (chessboard.at<uchar>(i, j) != 0)
+			if (chessboard.at<uint16_t>(i, j) != 0)
 			{
-				used.push_back(chessboard.at<uchar>(i, j));
+				used.push_back(chessboard.at<uint16_t>(i, j));
 			}
 		}
 	}
@@ -220,7 +207,7 @@ float chessboardEnergy(cv::Mat chessboard, struct Corner_t corners)
 			std::vector<cv::Point2f> x;
 			for (int i = k; i <= k + 2; i++)
 			{
-				x.push_back(corners.p[chessboard.at<uchar>(j, i)]);
+				x.push_back(corners.p[chessboard.at<uint16_t>(j, i)]);
 			}
 			cv::Point2f x_ = x[0] + x[2] - 2 * x[1];
 			float x_norm1 = sqrt(x_.x*x_.x+x_.y*x_.y);
@@ -236,7 +223,7 @@ float chessboardEnergy(cv::Mat chessboard, struct Corner_t corners)
 			std::vector<cv::Point2f> x;
 			for (int i = k; i <= k + 2; i++)
 			{
-				x.push_back(corners.p[chessboard.at<uchar>(i, j)]);
+				x.push_back(corners.p[chessboard.at<uint16_t>(i, j)]);
 			}
 			cv::Point x_ = x[0] + x[2] - 2 * x[1];
 			float x_norm1 = sqrt(x_.x*x_.x + x_.y*x_.y);
@@ -250,7 +237,7 @@ float chessboardEnergy(cv::Mat chessboard, struct Corner_t corners)
 
 cv::Mat growChessboard(cv::Mat chessboard, struct Corner_t corners, int boarder_type)
 {
-	if (chessboard.at<uchar>(0, 0) == 0 && chessboard.at<uchar>(0, 1) == 0)
+	if (chessboard.at<uint16_t>(0, 0) == 0 && chessboard.at<uint16_t>(0, 1) == 0)
 		return chessboard;
 	std::vector<int> unused;
 	std::vector<int> used;
@@ -261,9 +248,9 @@ cv::Mat growChessboard(cv::Mat chessboard, struct Corner_t corners, int boarder_
 	{
 		for (int j = 0; j < chessboard.cols; j++)
 		{
-			if (chessboard.at<uchar>(i, j) != 0)
+			if (chessboard.at<uint16_t>(i, j) != 0)
 			{
-				used.push_back(chessboard.at<uchar>(i, j));
+				used.push_back(chessboard.at<uint16_t>(i, j));
 			}
 		}
 	}
@@ -290,19 +277,19 @@ cv::Mat growChessboard(cv::Mat chessboard, struct Corner_t corners, int boarder_
 		std::vector<cv::Point2f> pred;
 		for (int i = 0; i < chessboard.rows; i++)
 		{
-			pred.push_back(predictCorners(corners.p[chessboard.at<uchar>(i, chessboard.cols-3)],
-				corners.p[chessboard.at<uchar>(i, chessboard.cols - 2)], 
-				corners.p[chessboard.at<uchar>(i, chessboard.cols - 1)]));
+			pred.push_back(predictCorners(corners.p[chessboard.at<uint16_t>(i, chessboard.cols-3)],
+				corners.p[chessboard.at<uint16_t>(i, chessboard.cols - 2)], 
+				corners.p[chessboard.at<uint16_t>(i, chessboard.cols - 1)]));
 		}
 		std::vector<int> idx = assignClosestCorners(cand, pred);
 		if (idx.size() > 0)
 		{
-			cv::Mat new_chess = cv::Mat::zeros(cv::Size(1, chessboard.rows), CV_8U);
+			cv::Mat new_chess = cv::Mat::zeros(cv::Size(1, chessboard.rows), CV_16U);
 			for (int j = 0; j < idx.size(); j++)
 			{
-				new_chess.at<uchar>(j, 0) = unused[idx[j]];
+				new_chess.at<uint16_t>(j, 0) = unused[idx[j]];
 			}
-			cv::Mat new_chessboard = cv::Mat::zeros(cv::Size(chessboard.cols+1, chessboard.rows), CV_8U);
+			cv::Mat new_chessboard = cv::Mat::zeros(cv::Size(chessboard.cols+1, chessboard.rows), CV_16U);
 			cv::Mat new_roi = new_chessboard(cv::Rect(0, 0, chessboard.cols, chessboard.rows));
 			chessboard.convertTo(new_roi, new_roi.type());
 			new_roi = new_chessboard(cv::Rect(chessboard.cols, 0, 1, chessboard.rows));
@@ -316,19 +303,19 @@ cv::Mat growChessboard(cv::Mat chessboard, struct Corner_t corners, int boarder_
 		std::vector<cv::Point2f> pred;
 		for (int i = 0; i < chessboard.cols; i++)
 		{
-			pred.push_back(predictCorners(corners.p[chessboard.at<uchar>(chessboard.rows - 3, i)],
-				corners.p[chessboard.at<uchar>(chessboard.rows - 2, i)],
-				corners.p[chessboard.at<uchar>(chessboard.rows - 1, i)]));
+			pred.push_back(predictCorners(corners.p[chessboard.at<uint16_t>(chessboard.rows - 3, i)],
+				corners.p[chessboard.at<uint16_t>(chessboard.rows - 2, i)],
+				corners.p[chessboard.at<uint16_t>(chessboard.rows - 1, i)]));
 		}
 		std::vector<int> idx = assignClosestCorners(cand, pred);
 		if (idx.size() > 0)
 		{
-			cv::Mat new_chess = cv::Mat::zeros(cv::Size(chessboard.cols, 1), CV_8U);
+			cv::Mat new_chess = cv::Mat::zeros(cv::Size(chessboard.cols, 1), CV_16U);
 			for (int j = 0; j < idx.size(); j++)
 			{
-				new_chess.at<uchar>(0, j) = unused[idx[j]];
+				new_chess.at<uint16_t>(0, j) = unused[idx[j]];
 			}
-			cv::Mat new_chessboard = cv::Mat::zeros(cv::Size(chessboard.cols, chessboard.rows + 1), CV_8U);
+			cv::Mat new_chessboard = cv::Mat::zeros(cv::Size(chessboard.cols, chessboard.rows + 1), CV_16U);
 			cv::Mat new_roi = new_chessboard(cv::Rect(0, 0, chessboard.cols, chessboard.rows));
 			chessboard.convertTo(new_roi, new_roi.type());
 			new_roi = new_chessboard(cv::Rect(0, chessboard.rows, chessboard.cols, 1));
@@ -342,19 +329,19 @@ cv::Mat growChessboard(cv::Mat chessboard, struct Corner_t corners, int boarder_
 		std::vector<cv::Point2f> pred;
 		for (int i = 0; i < chessboard.rows; i++)
 		{
-			pred.push_back(predictCorners(corners.p[chessboard.at<uchar>(i, 2)],
-				corners.p[chessboard.at<uchar>(i, 1)],
-				corners.p[chessboard.at<uchar>(i, 0)]));
+			pred.push_back(predictCorners(corners.p[chessboard.at<uint16_t>(i, 2)],
+				corners.p[chessboard.at<uint16_t>(i, 1)],
+				corners.p[chessboard.at<uint16_t>(i, 0)]));
 		}
 		std::vector<int> idx = assignClosestCorners(cand, pred);
 		if (idx.size() > 0)
 		{
-			cv::Mat new_chess = cv::Mat::zeros(cv::Size(1, chessboard.rows), CV_8U);
+			cv::Mat new_chess = cv::Mat::zeros(cv::Size(1, chessboard.rows), CV_16U);
 			for (int j = 0; j < idx.size(); j++)
 			{
-				new_chess.at<uchar>(j, 0) = unused[idx[j]];
+				new_chess.at<uint16_t>(j, 0) = unused[idx[j]];
 			}
-			cv::Mat new_chessboard = cv::Mat::zeros(cv::Size(chessboard.cols + 1, chessboard.rows), CV_8U);
+			cv::Mat new_chessboard = cv::Mat::zeros(cv::Size(chessboard.cols + 1, chessboard.rows), CV_16U);
 			cv::Mat new_roi = new_chessboard(cv::Rect(1, 0, chessboard.cols, chessboard.rows));
 			chessboard.convertTo(new_roi, new_roi.type());
 			new_roi = new_chessboard(cv::Rect(0, 0, 1, chessboard.rows));
@@ -368,19 +355,19 @@ cv::Mat growChessboard(cv::Mat chessboard, struct Corner_t corners, int boarder_
 		std::vector<cv::Point2f> pred;
 		for (int i = 0; i < chessboard.cols; i++)
 		{
-			pred.push_back(predictCorners(corners.p[chessboard.at<uchar>(2, i)],
-				corners.p[chessboard.at<uchar>(1, i)],
-				corners.p[chessboard.at<uchar>(0, i)]));
+			pred.push_back(predictCorners(corners.p[chessboard.at<uint16_t>(2, i)],
+				corners.p[chessboard.at<uint16_t>(1, i)],
+				corners.p[chessboard.at<uint16_t>(0, i)]));
 		}
 		std::vector<int> idx = assignClosestCorners(cand, pred);
 		if (idx.size() > 0)
 		{
-			cv::Mat new_chess = cv::Mat::zeros(cv::Size(chessboard.cols, 1), CV_8U);
+			cv::Mat new_chess = cv::Mat::zeros(cv::Size(chessboard.cols, 1), CV_16U);
 			for (int j = 0; j < idx.size(); j++)
 			{
-				new_chess.at<uchar>(0, j) = unused[idx[j]];
+				new_chess.at<uint16_t>(0, j) = unused[idx[j]];
 			}
-			cv::Mat new_chessboard = cv::Mat::zeros(cv::Size(chessboard.cols, chessboard.rows + 1), CV_8U);
+			cv::Mat new_chessboard = cv::Mat::zeros(cv::Size(chessboard.cols, chessboard.rows + 1), CV_16U);
 			cv::Mat new_roi = new_chessboard(cv::Rect(0, 1, chessboard.cols, chessboard.rows));
 			chessboard.convertTo(new_roi, new_roi.type());
 			new_roi = new_chessboard(cv::Rect(0, 0, chessboard.cols, 1));
@@ -447,23 +434,23 @@ void plotChessboards(cv::Mat img, std::vector<cv::Mat> chessboards, struct Corne
 	for (int i = 0; i < chessboards.size(); i++)
 	{
 		cv::Mat chessboard = chessboards[i];
-		cv::Point2f o = corners.p[chessboard.at<uchar>(0, 0)];
-		cv::Point2f o1 = corners.p[chessboard.at<uchar>(0, 1)];
-		cv::Point2f o2 = corners.p[chessboard.at<uchar>(1, 0)];
+		cv::Point2f o = corners.p[chessboard.at<uint16_t>(0, 0)];
+		cv::Point2f o1 = corners.p[chessboard.at<uint16_t>(0, 1)];
+		cv::Point2f o2 = corners.p[chessboard.at<uint16_t>(1, 0)];
 		if (img.channels() == 3)
 		{
 			for (int j = 0; j < chessboard.rows; j++)
 			{
 				for (int k = 1; k < chessboard.cols; k++)
 				{
-					cv::line(img, corners.p[chessboard.at<uchar>(j, k - 1)], corners.p[chessboard.at<uchar>(j, k)], cv::Scalar(0, 0, 255), 2);
+					cv::line(img, corners.p[chessboard.at<uint16_t>(j, k - 1)], corners.p[chessboard.at<uint16_t>(j, k)], cv::Scalar(0, 0, 255), 2);
 				}
 			}
 			for (int j = 0; j < chessboard.cols; j++)
 			{
 				for (int k = 1; k < chessboard.rows; k++)
 				{
-					cv::line(img, corners.p[chessboard.at<uchar>(k - 1, j)], corners.p[chessboard.at<uchar>(k, j)], cv::Scalar(0, 0, 255), 2);
+					cv::line(img, corners.p[chessboard.at<uint16_t>(k - 1, j)], corners.p[chessboard.at<uint16_t>(k, j)], cv::Scalar(0, 0, 255), 2);
 				}
 			}
 			cv::line(img, o, o1, cv::Scalar(255, 0, 0), 2);
