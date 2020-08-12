@@ -5,7 +5,7 @@ std::vector<cv::Mat> chessboardsFromCorners(struct Corner_t corners)
 	std::cout << "Structure recovery ..." << std::endl;
 	std::vector<cv::Mat> chessboards;
 	cv::Mat chessboard = cv::Mat::zeros(cv::Size(3, 3), CV_16U);
-	for (int i = 0; i < corners.p.size(); i++)
+	for (int i = 0; i < corners.p.size()/2; i++)
 	{
 		chessboard = initChessboard(corners, i);
 		if (chessboard.at<uint16_t>(0, 0) == 0 && chessboard.at<uint16_t>(0, 1) == 0)
@@ -14,9 +14,9 @@ std::vector<cv::Mat> chessboardsFromCorners(struct Corner_t corners)
 			continue;
 		while (1)
 		{
-			float enegy = chessboardEnergy(chessboard, corners);
+			double enegy = chessboardEnergy(chessboard, corners);
 			std::vector<cv::Mat> proposal;
-			std::vector<float> p_enegy;
+			std::vector<double> p_enegy;
 			for (int j = 0; j < 4; j++)
 			{
 				cv::Mat chess = growChessboard(chessboard, corners, j);
@@ -31,7 +31,7 @@ std::vector<cv::Mat> chessboardsFromCorners(struct Corner_t corners)
 		}
 		if (chessboardEnergy(chessboard, corners) < -10)
 		{
-			std::vector<cv::Point2f> overlap;
+			std::vector<cv::Point2d> overlap;
 			if (chessboards.size() > 0)
 			{
 				overlap.resize(chessboards.size());
@@ -59,7 +59,7 @@ std::vector<cv::Mat> chessboardsFromCorners(struct Corner_t corners)
 						overlaped = true;
 						if (overlap[j].y > chessboardEnergy(chessboard, corners))
 						{
-							chessboards[j] = cv::Mat::zeros(cv::Size(2, 2), CV_32F);
+							chessboards[j] = cv::Mat::zeros(cv::Size(2, 2), CV_64F);
 							lower_enegy = true;
 						}
 					}
@@ -68,7 +68,7 @@ std::vector<cv::Mat> chessboardsFromCorners(struct Corner_t corners)
 					chessboards.push_back(chessboard);
 				for (auto iter = chessboards.begin(); iter != chessboards.end(); iter++)
 				{
-					if (iter->at<float>(0, 0) == 0 && iter->at<float>(0, 1) == 0)
+					if (iter->at<double>(0, 0) == 0 && iter->at<double>(0, 1) == 0)
 					{
 						chessboards.erase(iter);
 						iter--;
@@ -90,13 +90,13 @@ cv::Mat initChessboard(struct Corner_t corners, int idx)
 	cv::Mat chessboard = cv::Mat::zeros(cv::Size(3, 3), CV_16U);
 	if (corners.p.size() < 9)
 		return chessboard;
-	cv::Point2f v1 = corners.v1[idx];
-	cv::Point2f v2 = corners.v2[idx];
-	cv::Point2f minus_v1 = cv::Point2f(-corners.v1[idx].x, -corners.v1[idx].y);
-	cv::Point2f minus_v2 = cv::Point2f(-corners.v2[idx].x, -corners.v2[idx].y);
+	cv::Point2d v1 = corners.v1[idx];
+	cv::Point2d v2 = corners.v2[idx];
+	cv::Point2d minus_v1 = cv::Point2d(-corners.v1[idx].x, -corners.v1[idx].y);
+	cv::Point2d minus_v2 = cv::Point2d(-corners.v2[idx].x, -corners.v2[idx].y);
 	chessboard.at<uint16_t>(1, 1) = idx;
-	float dist1[2] = { 0 };
-	float dist2[6] = { 0 };
+	double dist1[2] = { 0 };
+	double dist2[6] = { 0 };
 	int neighbor_idx = 0;
 	// find left/right/top/bottom neighbors
 	directionalNeighbor(idx, v1, chessboard, corners, &neighbor_idx, &dist1[0]);
@@ -116,14 +116,14 @@ cv::Mat initChessboard(struct Corner_t corners, int idx)
 	chessboard.at<uint16_t>(0, 2) = neighbor_idx;
 	directionalNeighbor(chessboard.at<uint16_t>(1, 2), v2, chessboard, corners, &neighbor_idx, &dist2[5]);
 	chessboard.at<uint16_t>(2, 2) = neighbor_idx;
-	float ave_1 = average(dist1, 2);
-	float std_1 = stdd(dist1, 2, ave_1);
+	double ave_1 = average(dist1, 2);
+	double std_1 = stdd(dist1, 2, ave_1);
 	if (std_1 / ave_1 > 0.3)
 	{
 		return cv::Mat::zeros(cv::Size(3, 3), CV_16U);
 	}
-	float ave_2 = average(dist2, 6);
-	float std_2 = stdd(dist2, 6, ave_2);
+	double ave_2 = average(dist2, 6);
+	double std_2 = stdd(dist2, 6, ave_2);
 	if (std_2 / ave_2 > 0.3)
 	{
 		return cv::Mat::zeros(cv::Size(3, 3), CV_16U);
@@ -131,9 +131,9 @@ cv::Mat initChessboard(struct Corner_t corners, int idx)
 	return chessboard;
 }
 
-float average(float* a, int length)
+double average(double* a, int length)
 {
-	float sum = 0;
+	double sum = 0;
 	for (int i = 0; i < length; i++)
 	{
 		sum += a[i];
@@ -141,9 +141,9 @@ float average(float* a, int length)
 	return sum / length;
 }
 
-float stdd(float* a, int length, float mean)
+double stdd(double* a, int length, double mean)
 {
-	float sum = 0;
+	double sum = 0;
 	for (int i = 0; i < length; i++)
 	{
 		sum += (a[i] - mean)*(a[i] - mean);
@@ -152,7 +152,7 @@ float stdd(float* a, int length, float mean)
 	return sqrt(sum);
 }
 
-void directionalNeighbor(int idx, cv::Point2f v, cv::Mat chessboard, struct Corner_t corners, int* neighbor_idx, float* min_dist)
+void directionalNeighbor(int idx, cv::Point2d v, cv::Mat chessboard, struct Corner_t corners, int* neighbor_idx, double* min_dist)
 {
 	
 	std::vector<int> unused;
@@ -181,14 +181,14 @@ void directionalNeighbor(int idx, cv::Point2f v, cv::Mat chessboard, struct Corn
 			}
 		}
 	}
-	std::vector<float> dist;
+	std::vector<double> dist;
 	dist.resize(unused.size());
 	for (int i = 0; i < unused.size(); i++)
 	{
-		cv::Point2f dir = corners.p[unused[i]] - corners.p[idx];
+		cv::Point2d dir = corners.p[unused[i]] - corners.p[idx];
 		dist[i] = dir.x*v.x + dir.y*v.y;
-		cv::Point2f edge = dir - dist[i] * v;
-		float dist_edge = sqrt(edge.x*edge.x+edge.y*edge.y);
+		cv::Point2d edge = dir - dist[i] * v;
+		double dist_edge = sqrt(edge.x*edge.x+edge.y*edge.y);
 		if (dist[i] < 0) dist[i] = 1e10;
 		dist[i] = dist[i] + 5 * dist_edge;
 	}
@@ -197,22 +197,22 @@ void directionalNeighbor(int idx, cv::Point2f v, cv::Mat chessboard, struct Corn
 	*neighbor_idx = unused[min_idx];
 }
 
-float chessboardEnergy(cv::Mat chessboard, struct Corner_t corners)
+double chessboardEnergy(cv::Mat chessboard, struct Corner_t corners)
 {
-	float E_structure = 0;
+	double E_structure = 0;
 	for (int j = 0; j < chessboard.rows; j++)
 	{
 		for (int k = 0; k < chessboard.cols-2; k++)
 		{
-			std::vector<cv::Point2f> x;
+			std::vector<cv::Point2d> x;
 			for (int i = k; i <= k + 2; i++)
 			{
 				x.push_back(corners.p[chessboard.at<uint16_t>(j, i)]);
 			}
-			cv::Point2f x_ = x[0] + x[2] - 2 * x[1];
-			float x_norm1 = sqrt(x_.x*x_.x+x_.y*x_.y);
+			cv::Point2d x_ = x[0] + x[2] - 2 * x[1];
+			double x_norm1 = sqrt(x_.x*x_.x+x_.y*x_.y);
 			x_ = x[0] - x[2];
-			float x_norm2 = sqrt(x_.x*x_.x + x_.y*x_.y);
+			double x_norm2 = sqrt(x_.x*x_.x + x_.y*x_.y);
 			E_structure = std::max(E_structure, x_norm1/x_norm2);
 		}
 	}
@@ -220,15 +220,15 @@ float chessboardEnergy(cv::Mat chessboard, struct Corner_t corners)
 	{
 		for (int k = 0; k < chessboard.rows - 2; k++)
 		{
-			std::vector<cv::Point2f> x;
+			std::vector<cv::Point2d> x;
 			for (int i = k; i <= k + 2; i++)
 			{
 				x.push_back(corners.p[chessboard.at<uint16_t>(i, j)]);
 			}
 			cv::Point x_ = x[0] + x[2] - 2 * x[1];
-			float x_norm1 = sqrt(x_.x*x_.x + x_.y*x_.y);
+			double x_norm1 = sqrt(x_.x*x_.x + x_.y*x_.y);
 			x_ = x[0] - x[2];
-			float x_norm2 = sqrt(x_.x*x_.x + x_.y*x_.y);
+			double x_norm2 = sqrt(x_.x*x_.x + x_.y*x_.y);
 			E_structure = std::max(E_structure, x_norm1 / x_norm2);
 		}
 	}
@@ -265,7 +265,7 @@ cv::Mat growChessboard(cv::Mat chessboard, struct Corner_t corners, int boarder_
 			}
 		}
 	}
-	std::vector<cv::Point2f> cand;
+	std::vector<cv::Point2d> cand;
 	for (int i = 0; i < unused.size(); i++)
 	{
 		cand.push_back(corners.p[unused[i]]);
@@ -274,7 +274,7 @@ cv::Mat growChessboard(cv::Mat chessboard, struct Corner_t corners, int boarder_
 	{
 	case 0:
 	{
-		std::vector<cv::Point2f> pred;
+		std::vector<cv::Point2d> pred;
 		for (int i = 0; i < chessboard.rows; i++)
 		{
 			pred.push_back(predictCorners(corners.p[chessboard.at<uint16_t>(i, chessboard.cols-3)],
@@ -300,7 +300,7 @@ cv::Mat growChessboard(cv::Mat chessboard, struct Corner_t corners, int boarder_
 	}
 	case 1:
 	{
-		std::vector<cv::Point2f> pred;
+		std::vector<cv::Point2d> pred;
 		for (int i = 0; i < chessboard.cols; i++)
 		{
 			pred.push_back(predictCorners(corners.p[chessboard.at<uint16_t>(chessboard.rows - 3, i)],
@@ -326,7 +326,7 @@ cv::Mat growChessboard(cv::Mat chessboard, struct Corner_t corners, int boarder_
 	}
 	case 2:
 	{
-		std::vector<cv::Point2f> pred;
+		std::vector<cv::Point2d> pred;
 		for (int i = 0; i < chessboard.rows; i++)
 		{
 			pred.push_back(predictCorners(corners.p[chessboard.at<uint16_t>(i, 2)],
@@ -352,7 +352,7 @@ cv::Mat growChessboard(cv::Mat chessboard, struct Corner_t corners, int boarder_
 	}
 	case 3:
 	{
-		std::vector<cv::Point2f> pred;
+		std::vector<cv::Point2d> pred;
 		for (int i = 0; i < chessboard.cols; i++)
 		{
 			pred.push_back(predictCorners(corners.p[chessboard.at<uint16_t>(2, i)],
@@ -380,35 +380,35 @@ cv::Mat growChessboard(cv::Mat chessboard, struct Corner_t corners, int boarder_
 	return chessboard;
 }
 
-cv::Point2f predictCorners(cv::Point2f p1, cv::Point2f p2, cv::Point2f p3)
+cv::Point2d predictCorners(cv::Point2d p1, cv::Point2d p2, cv::Point2d p3)
 {
-	cv::Point2f v1 = p2 - p1;
-	cv::Point2f v2 = p3 - p2;
-	float a1 = atan2(v1.y, v1.x);
-	float a2 = atan2(v2.y, v2.x);
-	float a3 = 2 * a2 - a1;
-	float s1 = sqrt(v1.x*v1.x+v1.y*v1.y);
-	float s2 = sqrt(v2.x*v2.x+v2.y*v2.y);
-	float s3 = 2 * s2 - s1;
-	cv::Point2f pred;
+	cv::Point2d v1 = p2 - p1;
+	cv::Point2d v2 = p3 - p2;
+	double a1 = atan2(v1.y, v1.x);
+	double a2 = atan2(v2.y, v2.x);
+	double a3 = 2 * a2 - a1;
+	double s1 = sqrt(v1.x*v1.x+v1.y*v1.y);
+	double s2 = sqrt(v2.x*v2.x+v2.y*v2.y);
+	double s3 = 2 * s2 - s1;
+	cv::Point2d pred;
 	pred.x = p3.x + 0.75*s3*cos(a3);
 	pred.y = p3.y + 0.75*s3*sin(a3);
 	return pred;
 }
 
-std::vector<int> assignClosestCorners(std::vector<cv::Point2f> cand, std::vector<cv::Point2f> pred)
+std::vector<int> assignClosestCorners(std::vector<cv::Point2d> cand, std::vector<cv::Point2d> pred)
 {
 	std::vector<int> idx;
 	if (cand.size() < pred.size())
 		return idx;
 	idx.resize(pred.size());
-	cv::Mat D = cv::Mat::zeros(cv::Size(pred.size(), cand.size()), CV_32F);
+	cv::Mat D = cv::Mat::zeros(cv::Size(pred.size(), cand.size()), CV_64F);
 	for (int i = 0; i < pred.size(); i++)
 	{
 		for (int j = 0; j < cand.size(); j++)
 		{
-			cv::Point2f delta = cand[j] - pred[i];
-			D.at<float>(j, i) = sqrt(delta.x*delta.x+delta.y*delta.y);
+			cv::Point2d delta = cand[j] - pred[i];
+			D.at<double>(j, i) = sqrt(delta.x*delta.x+delta.y*delta.y);
 		}
 	}
 	for (int i = 0; i < pred.size(); i++)
@@ -419,11 +419,11 @@ std::vector<int> assignClosestCorners(std::vector<cv::Point2f> cand, std::vector
 		idx[minIdx[1]] = minIdx[0];
 		for (int j = 0; j < D.cols; j++)
 		{
-			D.at<float>(minIdx[0], j) = 1e10;
+			D.at<double>(minIdx[0], j) = 1e10;
 		}
 		for (int j = 0; j < D.rows; j++)
 		{
-			D.at<float>(j, minIdx[1]) = 1e10;
+			D.at<double>(j, minIdx[1]) = 1e10;
 		}
 	}
 	return idx;
@@ -434,9 +434,9 @@ void plotChessboards(cv::Mat img, std::vector<cv::Mat> chessboards, struct Corne
 	for (int i = 0; i < chessboards.size(); i++)
 	{
 		cv::Mat chessboard = chessboards[i];
-		cv::Point2f o = corners.p[chessboard.at<uint16_t>(0, 0)];
-		cv::Point2f o1 = corners.p[chessboard.at<uint16_t>(0, 1)];
-		cv::Point2f o2 = corners.p[chessboard.at<uint16_t>(1, 0)];
+		cv::Point2d o = corners.p[chessboard.at<uint16_t>(0, 0)];
+		cv::Point2d o1 = corners.p[chessboard.at<uint16_t>(0, 1)];
+		cv::Point2d o2 = corners.p[chessboard.at<uint16_t>(1, 0)];
 		if (img.channels() == 3)
 		{
 			for (int j = 0; j < chessboard.rows; j++)

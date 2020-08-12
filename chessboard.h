@@ -5,13 +5,13 @@
 
 std::vector<cv::Mat> chessboardsFromCorners(struct Corner_t corners);
 cv::Mat initChessboard(struct Corner_t corners, int idx);
-float average(float* a, int length);
-float stdd(float* a, int length, float mean);
-void directionalNeighbor(int idx, cv::Point2f v, cv::Mat chessboard, struct Corner_t corners, int* neighbor_idx, float* min_dist);
-float chessboardEnergy(cv::Mat chessboard, struct Corner_t corners);
+double average(double* a, int length);
+double stdd(double* a, int length, double mean);
+void directionalNeighbor(int idx, cv::Point2d v, cv::Mat chessboard, struct Corner_t corners, int* neighbor_idx, double* min_dist);
+double chessboardEnergy(cv::Mat chessboard, struct Corner_t corners);
 cv::Mat growChessboard(cv::Mat chessboard, struct Corner_t corners, int boarder_type);
-cv::Point2f predictCorners(cv::Point2f p1, cv::Point2f p2, cv::Point2f p3);
-std::vector<int> assignClosestCorners(std::vector<cv::Point2f> cand, std::vector<cv::Point2f> pred);
+cv::Point2d predictCorners(cv::Point2d p1, cv::Point2d p2, cv::Point2d p3);
+std::vector<int> assignClosestCorners(std::vector<cv::Point2d> cand, std::vector<cv::Point2d> pred);
 void plotChessboards(cv::Mat img, std::vector<cv::Mat> chessboards, struct Corner_t corners);
 
 #endif
