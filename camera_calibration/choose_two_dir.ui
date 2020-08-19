@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>choose_two_dir</class>
+ <widget class="QDialog" name="choose_two_dir">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -12,6 +12,10 @@
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="res/image.qrc">
+    <normaloff>:/icon/camera.png</normaloff>:/icon/camera.png</iconset>
   </property>
   <widget class="QLabel" name="label">
    <property name="geometry">
@@ -181,6 +185,8 @@
    </property>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="res/image.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -1,10 +1,21 @@
 #include "findCorner.h"
 #include "chessboard.h"
+#include "CameraCalibration.h"
 #include <algorithm>
 #include <math.h>
 #include <numeric>
 
-struct Chessboarder_t findCorner(cv::Mat img, int sigma, double peakThreshold)
+FindcornerThread::FindcornerThread(QObject *parent){}
+
+FindcornerThread::~FindcornerThread(){}
+
+void FindcornerThread::run()
+{
+    find_corner_thread_chessboard = findCorner(find_corner_thread_img, 2);
+    emit isDone();  //发送完成信号
+}
+
+struct Chessboarder_t findCorner(cv::Mat img, int sigma)
 {
     if (img.channels() == 3)
         cv::cvtColor(img, img, CV_BGR2GRAY);
@@ -54,7 +65,6 @@ struct Chessboarder_t findCorner(cv::Mat img, int sigma, double peakThreshold)
         corners.p.push_back(detectKeyPoint[i].pt);
     }
 
-    //corners.p = nonMaximumSuppression(cxy, 4, peakThreshold, 5);
     corners = getOrientations(img_angle, img_weight, corners, 5);
     std::vector<cv::Mat> chessboards = chessboardsFromCorners(corners);
     struct Corner_t new_corner;
@@ -136,40 +146,12 @@ struct Template_t createCorrelationPatch(double angle_1, double angle_2, int rad
 
 void secondDerivCornerMetric(cv::Mat img, int sigma, cv::Mat *cxy, cv::Mat *Ixy)
 {
-    cv::Mat Ig;
-    cv::GaussianBlur(img, Ig, cv::Size(7 * sigma + 1, 7 * sigma + 1), sigma, sigma);
-    cv::Mat Ix = Ig.clone(), Iy = Ig.clone(), c45 = Ig.clone();
-    cv::Mat I_45_45 = Ig.clone();
+    cv::GaussianBlur(img, img, cv::Size(7 * sigma + 1, 7 * sigma + 1), sigma, sigma);
+    cv::Mat Ix = img.clone();
     cv::Mat du = (cv::Mat_<double>(1, 3) << 1, 0, -1);
     cv::Mat dv = du.t();
-    cv::Mat I_45 = img.clone(), I_n45 = img.clone(), I_45_x, I_45_y;
-    cv::filter2D(Ig, Ix, Ig.depth(), du, cvPoint(-1, -1));
-    cv::filter2D(Ig, Iy, Ig.depth(), dv, cvPoint(-1, -1));
-    for (int i = 0; i < Ig.rows; i++)
-    {
-        for (int j = 0; j < Ig.cols; j++)
-        {
-            I_45.at<double>(i, j) = Ix.at<double>(i, j)*cos(M_PI / 4) + Iy.at<double>(i, j)*sin(M_PI / 4);
-            I_n45.at<double>(i, j) = Ix.at<double>(i, j)*cos(-M_PI / 4) + Iy.at<double>(i, j)*sin(-M_PI / 4);
-        }
-    }
+    cv::filter2D(img, Ix, img.depth(), du, cvPoint(-1, -1));
     cv::filter2D(Ix, *Ixy, Ix.depth(), dv, cvPoint(-1, -1));
-    cv::filter2D(I_45, I_45_x, I_45.depth(), du, cvPoint(-1, -1));
-    cv::filter2D(I_45, I_45_y, I_45.depth(), dv, cvPoint(-1, -1));
-
-    for (int i = 0; i < I_45_x.rows; i++)
-    {
-        for (int j = 0; j < I_45_x.cols; j++)
-        {
-            I_45_45.at<double>(i, j) = I_45_x.at<double>(i, j)*cos(-M_PI / 4) + I_45_y.at<double>(i, j)*sin(-M_PI / 4);
-            cxy->at<double>(i, j) = sigma*sigma*fabs(Ixy->at<double>(i, j)) -
-                1.5*sigma*(fabs(I_45.at<double>(i, j)) + fabs(I_n45.at<double>(i, j)));
-            if (cxy->at<double>(i, j) < 0) cxy->at<double>(i, j) = 0;
-            c45.at<double>(i, j) = sigma*sigma*fabs(I_45_45.at<double>(i, j)) -
-                1.5*sigma*(fabs(Ix.at<double>(i, j)) + fabs(Iy.at<double>(i, j)));
-            if (c45.at<double>(i, j) < 0) c45.at<double>(i, j) = 0;
-        }
-    }
 
     int radius[3] = { 4, 8, 12 };
     cv::Mat template_props = (cv::Mat_<double>(6, 3) << 0, M_PI / 2, radius[0], -M_PI / 4, M_PI / 4, radius[0], 0, M_PI / 2, radius[1], -M_PI / 4, M_PI / 4, radius[1], 0, M_PI / 2, radius[2], -M_PI / 4, M_PI / 4, radius[2]);
@@ -205,57 +187,6 @@ void secondDerivCornerMetric(cv::Mat img, int sigma, cv::Mat *cxy, cv::Mat *Ixy)
         }
     }
     *cxy = img_corner;
-}
-
-std::vector<cv::Point2d> nonMaximumSuppression(cv::Mat img, int n, double tau, int margin)
-{
-    std::vector<cv::Point2d> results;
-    int width = img.cols;
-    int height = img.rows;
-    for (int i = n + margin; i < width - n - margin; i += n + 1)
-    {
-        for (int j = n + margin; j < height - n - margin; j += n + 1)
-        {
-            int maxi = i;
-            int maxj = j;
-            double maxval = img.at<double>(j, i);
-            for (int i2 = i; i2 <= i + n; i2++)
-            {
-                for (int j2 = j; j2 <= j + n; j2++)
-                {
-                    double currval = img.at<double>(j2, i2);
-                    if (currval > maxval)
-                    {
-                        maxi = i2;
-                        maxj = j2;
-                        maxval = currval;
-                    }
-                }
-            }
-
-            bool failed = false;
-            for (int i2 = maxi - n; i2 < std::min(maxi + n, width - margin); i2++)
-            {
-                for (int j2 = maxj - n; j2 < std::min(maxj + n, height - margin); j2++)
-                {
-                    double currval = img.at<double>(j2, i2);
-                    if (currval > maxval && (i2<i || i2>i + n || j2<j || j2>j + n))
-                    {
-                        failed = true;
-                        break;
-                    }
-                }
-                if (failed)
-                    break;
-            }
-            if (maxval >= tau && failed == false)
-            {
-                cv::Point2d point = cv::Point2d(double(maxi), double(maxj));
-                results.push_back(point);
-            }
-        }
-    }
-    return results;
 }
 
 struct Corner_t getOrientations(cv::Mat img_angle, cv::Mat img_weight, struct Corner_t corners, int r)

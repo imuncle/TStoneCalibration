@@ -1,5 +1,6 @@
 QT       += core gui
 QT += multimedia multimediawidgets
+QT += network
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
@@ -15,30 +16,36 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-RC_ICONS = camera.ico
+RC_ICONS = icon.ico
 
 SOURCES += \
-    chessboard.cpp \
-    dialog.cpp \
-    double_capture.cpp \
-    findCorner.cpp \
+    AboutUs.cpp \
+    camera_calibration/CameraCalibration.cpp \
+    camera_calibration/chessboard.cpp \
+    camera_calibration/choose_two_dir.cpp \
+    camera_calibration/double_capture.cpp \
+    camera_calibration/findCorner.cpp \
     main.cpp \
-    mainwindow.cpp \
-    single_capture.cpp
+    camera_calibration/single_capture.cpp \
+    mainwindow.cpp
 
 HEADERS += \
-    chessboard.h \
-    dialog.h \
-    double_capture.h \
-    findCorner.h \
-    mainwindow.h \
-    single_capture.h
+    AboutUs.h \
+    camera_calibration/CameraCalibration.h \
+    camera_calibration/chessboard.h \
+    camera_calibration/choose_two_dir.h \
+    camera_calibration/double_capture.h \
+    camera_calibration/findCorner.h \
+    camera_calibration/single_capture.h \
+    mainwindow.h
 
 FORMS += \
-    dialog.ui \
-    double_capture.ui \
-    mainwindow.ui \
-    single_capture.ui
+    AboutUs.ui \
+    camera_calibration/CameraCalibration.ui \
+    camera_calibration/choose_two_dir.ui \
+    camera_calibration/double_capture.ui \
+    camera_calibration/single_capture.ui \
+    mainwindow.ui
 
 INCLUDEPATH += C:/Users/uncle/Desktop/OpenCV/install/include\
                             C:/Users/uncle/Desktop/OpenCV/install/include/opencv\
@@ -49,8 +56,6 @@ LIBS += C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_core310.dl
              C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_highgui310.dll.a\
              C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_imgcodecs310.dll.a\
              C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_imgproc310.dll.a\
-             C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_photo310.dll.a\
-             C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_shape310.dll.a\
              C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_features2d310.dll.a
 
 # Default rules for deployment.
@@ -59,4 +64,4 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
-    image.qrc
+    camera_calibration/res/image.qrc

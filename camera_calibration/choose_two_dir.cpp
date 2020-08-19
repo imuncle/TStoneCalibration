@@ -1,9 +1,9 @@
-#include "dialog.h"
-#include "ui_dialog.h"
+#include "choose_two_dir.h"
+#include "ui_choose_two_dir.h"
 
-Dialog::Dialog(QWidget *parent) :
+choose_two_dir::choose_two_dir(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::Dialog)
+    ui(new Ui::choose_two_dir)
 {
     ui->setupUi(this);
     connect(ui->yes, SIGNAL(clicked()), this, SLOT(enter()));
@@ -12,12 +12,12 @@ Dialog::Dialog(QWidget *parent) :
     connect(ui->browse_right, SIGNAL(clicked()), this,SLOT(choose_right_dir()));
 }
 
-Dialog::~Dialog()
+choose_two_dir::~choose_two_dir()
 {
     delete ui;
 }
 
-void Dialog::enter()
+void choose_two_dir::enter()
 {
     if(ui->left_src->text().isEmpty() || ui->right_src->text().isEmpty())
     {
@@ -30,16 +30,16 @@ void Dialog::enter()
         return;
     }
     QString str = ui->left_src->text()+","+ui->right_src->text()+","+QString::number(ui->corner_size->value(),10,5);
-    emit SendSignal(str);
     this->close();
+    emit SendSignal(str);
 }
 
-void Dialog::cancel()
+void choose_two_dir::cancel()
 {
     this->close();
 }
 
-void Dialog::choose_left_dir()
+void choose_two_dir::choose_left_dir()
 {
     QString srcDirPath = QFileDialog::getExistingDirectory(nullptr, "Choose Directory", "./");
     if(srcDirPath.isEmpty())
@@ -49,7 +49,7 @@ void Dialog::choose_left_dir()
     ui->left_src->setText(srcDirPath);
 }
 
-void Dialog::choose_right_dir()
+void choose_two_dir::choose_right_dir()
 {
     QString srcDirPath = QFileDialog::getExistingDirectory(nullptr, "Choose Directory", "./");
     if(srcDirPath.isEmpty())

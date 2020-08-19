@@ -1,7 +1,15 @@
 #ifndef CHESSBOARD_H
 #define CHESSBOARD_H
 
-#include "findCorner.h"
+#include <opencv2/opencv.hpp>
+
+struct Corner_t
+{
+    std::vector<cv::Point2d> p;
+    std::vector<cv::Point2d> v1;
+    std::vector<cv::Point2d> v2;
+    std::vector<double> score;
+};
 
 std::vector<cv::Mat> chessboardsFromCorners(struct Corner_t corners);
 cv::Mat initChessboard(struct Corner_t corners, int idx);

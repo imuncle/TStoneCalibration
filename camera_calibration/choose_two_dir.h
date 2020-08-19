@@ -6,16 +6,16 @@
 #include <QMessageBox>
 
 namespace Ui {
-class Dialog;
+class choose_two_dir;
 }
 
-class Dialog : public QDialog
+class choose_two_dir : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit Dialog(QWidget *parent = nullptr);
-    ~Dialog();
+    explicit choose_two_dir(QWidget *parent = nullptr);
+    ~choose_two_dir();
 
 private slots:
     void enter();
@@ -27,7 +27,7 @@ signals:
     void SendSignal(QString str);
 
 private:
-    Ui::Dialog *ui;
+    Ui::choose_two_dir *ui;
 };
 
 #endif // DIALOG_H

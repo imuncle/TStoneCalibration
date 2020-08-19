@@ -3,13 +3,20 @@
 
 #include <opencv2/opencv.hpp>
 #include "chessboard.h"
+#include <QThread>
 
-struct Corner_t
+class FindcornerThread : public QThread
 {
-	std::vector<cv::Point2d> p;
-	std::vector<cv::Point2d> v1;
-	std::vector<cv::Point2d> v2;
-	std::vector<double> score;
+    Q_OBJECT
+public:
+    explicit FindcornerThread(QObject *parent = 0);
+    ~FindcornerThread();
+
+protected:
+    void run();
+
+signals:
+    void isDone();  //处理完成信号
 };
 
 struct Template_t
@@ -26,9 +33,8 @@ struct Chessboarder_t
     std::vector<cv::Mat> chessboard;
 };
 
-struct Chessboarder_t findCorner(cv::Mat img, int sigma, double peakThreshold);
+struct Chessboarder_t findCorner(cv::Mat img, int sigma);
 void secondDerivCornerMetric(cv::Mat img, int sigma, cv::Mat *cxy, cv::Mat *Ixy);
-std::vector<cv::Point2d> nonMaximumSuppression(cv::Mat img, int n, double tau, int margin);
 struct Corner_t getOrientations(cv::Mat img_angle, cv::Mat img_weight, struct Corner_t corners, int r);
 void edgeOrientations(cv::Mat img_angle, cv::Mat img_weight, cv::Point2d* v1, cv::Point2d* v2);
 std::vector<cv::Point3d> findModesMeanShift(cv::Mat hist, int sigma);

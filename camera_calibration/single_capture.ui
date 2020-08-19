@@ -1,41 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>double_capture</class>
- <widget class="QMainWindow" name="double_capture">
+ <class>single_capture</class>
+ <widget class="QMainWindow" name="single_capture">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1000</width>
+    <width>640</width>
     <height>480</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="res/image.qrc">
+    <normaloff>:/icon/camera.png</normaloff>:/icon/camera.png</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLabel" name="left_img">
+   <widget class="QLabel" name="image">
     <property name="geometry">
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>500</width>
-      <height>480</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="right_img">
-    <property name="geometry">
-     <rect>
-      <x>500</x>
-      <y>0</y>
-      <width>500</width>
+      <width>640</width>
       <height>480</height>
      </rect>
     </property>
@@ -49,7 +37,7 @@
    <widget class="QPushButton" name="capture">
     <property name="geometry">
      <rect>
-      <x>470</x>
+      <x>290</x>
       <y>350</y>
       <width>60</width>
       <height>60</height>
@@ -62,7 +50,7 @@
      <string/>
     </property>
     <property name="icon">
-     <iconset resource="image.qrc">
+     <iconset resource="res/image.qrc">
       <normaloff>:/icon/capture.png</normaloff>:/icon/capture.png</iconset>
     </property>
     <property name="iconSize">
@@ -78,27 +66,20 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1000</width>
+     <width>640</width>
      <height>22</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu_1">
+   <widget class="QMenu" name="menu">
     <property name="title">
-     <string>相机1</string>
+     <string>选择相机</string>
     </property>
    </widget>
-   <widget class="QMenu" name="menu_2">
-    <property name="title">
-     <string>相机2</string>
-    </property>
-   </widget>
-   <addaction name="menu_1"/>
-   <addaction name="menu_2"/>
+   <addaction name="menu"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources>
-  <include location="image.qrc"/>
+  <include location="res/image.qrc"/>
  </resources>
  <connections/>
 </ui>

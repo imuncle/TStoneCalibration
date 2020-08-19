@@ -35,6 +35,7 @@ private:
     //摄像头的取景器
     QCameraViewfinder* CameraViewFinder_left;
     QCameraViewfinder* CameraViewFinder_right;
+    QList<QCameraInfo> camera_list;
     void open_left(QCameraInfo info);
     void close_left();
     void open_right(QCameraInfo info);
@@ -44,6 +45,7 @@ private:
     QCameraImageCapture* CameraImageCapture_left;
     QCameraImageCapture* CameraImageCapture_right;
     QString save_path;
+    bool left_open = false, right_open = false;
 };
 
 #endif // DOUBLE_CAPTURE_H

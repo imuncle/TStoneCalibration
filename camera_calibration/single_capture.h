@@ -31,12 +31,14 @@ private:
     QCameraInfo last_info;
     //摄像头的取景器
     QCameraViewfinder* CameraViewFinder;
+    QList<QCameraInfo> camera_list;
     void open(QCameraInfo info);
     void close();
     void closeEvent(QCloseEvent *event);
     //记录摄像头内容
     QCameraImageCapture* CameraImageCapture;
     QString save_path;
+    bool open_flag = false;
 };
 
 #endif // SINGLE_CAPTURE_H
