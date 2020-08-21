@@ -9,7 +9,7 @@ class FindcornerThread : public QThread
 {
     Q_OBJECT
 public:
-    explicit FindcornerThread(QObject *parent = 0);
+    explicit FindcornerThread();
     ~FindcornerThread();
 
 protected:

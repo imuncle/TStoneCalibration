@@ -5,7 +5,7 @@
 #include <math.h>
 #include <numeric>
 
-FindcornerThread::FindcornerThread(QObject *parent){}
+FindcornerThread::FindcornerThread(){}
 
 FindcornerThread::~FindcornerThread(){}
 

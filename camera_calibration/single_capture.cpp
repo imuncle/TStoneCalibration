@@ -116,7 +116,7 @@ void single_capture::take_photo(int, const QImage &image)
     image.save(filename);
 }
 
-void single_capture::closeEvent ( QCloseEvent * e )
+void single_capture::closeEvent ( QCloseEvent *)
 {
     Camera->stop();
 }

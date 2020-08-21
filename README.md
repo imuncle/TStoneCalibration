@@ -36,6 +36,10 @@ LIBS += C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_core310.dl
         C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_features2d310.dll.a
 ```
 修改上述内容。
+3. 如果你在Linux上开发，需安装`v4l2`库。
+```bash
+sudo apt-get install libv4l-dev
+```
 
 ### 开发
 在此基础上可以很容易添加新的工具，添加流程如下（以下假设要添加一个名为`Hand_eye_calibration`的工具）：

@@ -16,8 +16,17 @@
 #include "findCorner.h"
 #include "chessboard.h"
 #include "choose_two_dir.h"
+#ifdef Q_OS_LINUX
+#include "single_capture_linux.h"
+#elif defined(Q_OS_WIN32)
 #include "single_capture.h"
+#endif
+
+#ifdef Q_OS_LINUX
+#include "double_capture_linux.h"
+#elif defined(Q_OS_WIN32)
 #include "double_capture.h"
+#endif
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class CameraCalibration; }
@@ -84,8 +93,13 @@ private slots:
 private:
     Ui::CameraCalibration *ui;
     choose_two_dir *d;
+#ifdef Q_OS_LINUX
+    single_capture_linux *single_c;
+    double_capture_linux *double_c;
+#elif defined(Q_OS_WIN32)
     single_capture *single_c;
     double_capture *double_c;
+#endif
     QImage Mat2QImage(cv::Mat cvImg);
     void ShowIntro();
     void HiddenIntro();

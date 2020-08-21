@@ -212,7 +212,7 @@ void double_capture::right_take_photo(int, const QImage &image)
     image.save(filename);
 }
 
-void double_capture::closeEvent ( QCloseEvent * e )
+void double_capture::closeEvent ( QCloseEvent *)
 {
     Camera_left->stop();
     Camera_right->stop();

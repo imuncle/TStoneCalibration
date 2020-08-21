@@ -18,8 +18,10 @@
 |CameraCalibration.cpp|程序主界面和主要逻辑的实现|
 |findCorner.cpp|棋盘角点检测算法的实现|
 |chessboard.cpp|根据检测到的角点进行棋盘生长|
-|sigle_capture.cpp|单个相机采集图像的实现|
-|double_capture.cpp|双目相机采集图片的实现|
+|sigle_capture.cpp|Windows上单个相机采集图像的实现|
+|double_capture.cpp|Windows上双目相机采集图片的实现|
+|sigle_capture_linux.cpp|Linux上单个相机采集图像的实现|
+|double_capture_linux.cpp|Linux上双目相机采集图片的实现|
 |choose_two_dir.cpp|立体标定图像文件夹选择对话框|
 |res|图标资源文件夹|
 

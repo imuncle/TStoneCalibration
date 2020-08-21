@@ -24,7 +24,9 @@ SOURCES += \
     camera_calibration/chessboard.cpp \
     camera_calibration/choose_two_dir.cpp \
     camera_calibration/double_capture.cpp \
+    camera_calibration/double_capture_linux.cpp \
     camera_calibration/findCorner.cpp \
+    camera_calibration/single_capture_linux.cpp \
     main.cpp \
     camera_calibration/single_capture.cpp \
     mainwindow.cpp
@@ -35,8 +37,11 @@ HEADERS += \
     camera_calibration/chessboard.h \
     camera_calibration/choose_two_dir.h \
     camera_calibration/double_capture.h \
+    camera_calibration/double_capture_linux.h \
     camera_calibration/findCorner.h \
     camera_calibration/single_capture.h \
+    camera_calibration/single_capture_linux.h \
+    camera_calibration/v4l2.hpp \
     mainwindow.h
 
 FORMS += \

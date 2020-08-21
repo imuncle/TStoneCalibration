@@ -82,6 +82,15 @@ void CameraCalibration::OpenCamera()
 {
     if(ui->single_camera->isChecked())
     {
+#ifdef Q_OS_LINUX
+        int camcount = v4l2.GetDeviceCount();
+        if(camcount < 1)
+        {
+            QMessageBox::warning(this, "警告", "没有检测到摄像头，请插上摄像头后再打开该窗口", QMessageBox::Yes);
+            return;
+        }
+        single_c = new single_capture_linux();
+#elif defined(Q_OS_WIN32)
         QList<QCameraInfo> camera_list = QCameraInfo::availableCameras();
         if(camera_list.length() < 1)
         {
@@ -89,6 +98,7 @@ void CameraCalibration::OpenCamera()
             return;
         }
         single_c = new single_capture();
+#endif
         single_c->setWindowTitle("单个相机拍照");
         QFont font = single_c->font();
         font.setPixelSize(12);
@@ -97,6 +107,9 @@ void CameraCalibration::OpenCamera()
     }
     else
     {
+#ifdef Q_OS_LINUX
+        double_c = new double_capture_linux();
+#elif defined(Q_OS_WIN32)
         QList<QCameraInfo> camera_list = QCameraInfo::availableCameras();
         if(camera_list.length() < 2)
         {
@@ -104,6 +117,7 @@ void CameraCalibration::OpenCamera()
             return;
         }
         double_c = new double_capture();
+#endif
         double_c->setWindowTitle("两个相机拍照");
         QFont font = double_c->font();
         font.setPixelSize(12);
