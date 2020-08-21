@@ -55,6 +55,7 @@ private:
     int err11, err19;
     void open_camera(int id);
     void close_camera();
+    void closeEvent(QCloseEvent *event);
     QString save_path;
     bool open_flag = false;
     int last_id;

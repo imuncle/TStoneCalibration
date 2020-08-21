@@ -108,6 +108,12 @@ void CameraCalibration::OpenCamera()
     else
     {
 #ifdef Q_OS_LINUX
+        int camcount = v4l2_left.GetDeviceCount();
+        if(camcount < 2)
+        {
+            QMessageBox::warning(this, "警告", "摄像头少于两个，请插上摄像头后再打开该窗口", QMessageBox::Yes);
+            return;
+        }
         double_c = new double_capture_linux();
 #elif defined(Q_OS_WIN32)
         QList<QCameraInfo> camera_list = QCameraInfo::availableCameras();

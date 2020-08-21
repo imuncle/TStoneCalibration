@@ -39,6 +39,7 @@ single_capture_linux::~single_capture_linux()
 
 void single_capture_linux::open_camera(int id)
 {
+    close_camera();
     last_id = id;
     QList<QAction*> actions = ui->menu->actions();
     for(int i = 0; i < actions.length(); i++)
@@ -128,7 +129,7 @@ void single_capture_linux::capture()
     QDateTime dateTime(QDateTime::currentDateTime());
     QString time = dateTime.toString("yyyy-MM-dd-hh-mm-ss");
     //创建图片保存路径名
-    QString filename = save_path + QString("./%1.jpg").arg(time);
+    QString filename = save_path +"/" + QString("%1.jpg").arg(time);
     //保存一帧数据
     q_image.save(filename);
 }
@@ -170,6 +171,13 @@ void SingleCaptureThread::run()
             emit SingleCaptureDone(img, ret);
         }
     }
+}
+
+void single_capture_linux::closeEvent ( QCloseEvent *)
+{
+    capture_thread->stop();
+    capture_thread->wait();
+    v4l2.StopRun();
 }
 
 #endif
