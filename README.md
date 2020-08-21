@@ -22,6 +22,7 @@ Release页面有最新的Windows程序下载。
 ## Contribute
 ### 环境配置
 1. 安装Qt以及Qt Creator，使用Qt Creator打开`TStoneCalibration.pro`
+
 2. 修改`TStoneCalibration.pro`中OpenCV的头文件路径和动态链接库的路径为你当前电脑里对应的路径
 ```txt
 INCLUDEPATH += C:/Users/uncle/Desktop/OpenCV/install/include\
@@ -36,6 +37,7 @@ LIBS += C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_core310.dl
         C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_features2d310.dll.a
 ```
 修改上述内容。
+
 3. 如果你在Linux上开发，需安装`v4l2`库。
 ```bash
 sudo apt-get install libv4l-dev
@@ -49,13 +51,16 @@ sudo apt-get install libv4l-dev
 
 #### 2.创建程序入口函数
 使用Qt Creator在该文件夹下新建一个UI，命名为HandEyeCalibration
+
 ![new_ui](guide/new_ui.jpg)
+
 ![new_ui](guide/new_ui_dir.jpg)
 
 这会自动创建`handeyecalibration.cpp`，`handeyecalibration.h`，`handeyecalibration.ui`三个文件。
 
 #### 3.在工具箱界面中添加图标
 打开`mainwindow.ui`，添加工具图标。
+
 ![new_ui](guide/new_ui_3.jpg)
 
 该图标由一个QPushButton和一个QLable组成，QPushButton的名字我设置为`HandEyeCalib`。
