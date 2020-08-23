@@ -32,7 +32,7 @@ double_capture_linux::double_capture_linux(QWidget *parent) :
                 close_left();
             }
         });
-        QAction *camera_1 = ui->menu_1->addAction(v4l2_left.GetCameraName(i));
+        QAction *camera_1 = ui->menu_2->addAction(v4l2_left.GetCameraName(i));
         camera_1->setCheckable(true);
         connect(camera_1, &QAction::triggered,[=](){
             if(last_right_id != i)
@@ -87,6 +87,7 @@ void double_capture_linux::close_left()
 {
     last_left_id = -1;
     capture_thread_l->stop();
+    capture_thread_l->quit();
     capture_thread_l->wait();
     v4l2_left.StopRun();
     open_left_flag = false;
@@ -127,6 +128,7 @@ void double_capture_linux::close_right()
 {
     last_right_id = -1;
     capture_thread_r->stop();
+    capture_thread_r->quit();
     capture_thread_r->wait();
     v4l2_right.StopRun();
     open_right_flag = false;
@@ -138,9 +140,7 @@ void double_capture_linux::DealLeftCaptureDone(QImage image, int result)
     //超时代表着VIDIOC_DQBUF会阻塞，直接关闭视频即可
     if(result == -1)
     {
-        capture_thread_l->stop();
-        capture_thread_l->wait();
-        v4l2_left.StopRun();
+        close_left();
 
         ui->left_img->clear();
         ui->left_img->setText("获取设备图像超时！");
@@ -186,9 +186,7 @@ void double_capture_linux::DealRightCaptureDone(QImage image, int result)
     //超时代表着VIDIOC_DQBUF会阻塞，直接关闭视频即可
     if(result == -1)
     {
-        capture_thread_r->stop();
-        capture_thread_r->wait();
-        v4l2_right.StopRun();
+        close_right();
 
         ui->right_img->clear();
         ui->right_img->setText("获取设备图像超时！");
@@ -256,13 +254,8 @@ void double_capture_linux::capture()
 
 void double_capture_linux::closeEvent ( QCloseEvent *)
 {
-    capture_thread_l->stop();
-    capture_thread_l->wait();
-    v4l2_left.StopRun();
-
-    capture_thread_r->stop();
-    capture_thread_r->wait();
-    v4l2_right.StopRun();
+    close_left();
+    close_right();
 }
 
 LeftCaptureThread::LeftCaptureThread()

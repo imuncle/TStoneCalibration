@@ -40,25 +40,7 @@ public:
     char *GetDeviceName(int index)
     {
         memset(devName, 0, sizeof(devName));
-
-        int count = 0;
-        char devname[15] = "";
-        int i;
-        for(i = 0; i < 100; i++)
-        {
-            sprintf(devname, "%s%d", "/dev/video", i);
-            if(test_device_exist(devname) == 0)
-            {
-                if(count == index)
-                    break;
-                count++;
-            }
-            else
-                memset(devname, 0, sizeof(devname));
-        }
-
-        strcpy(devName, devname);
-
+        sprintf(devName, "%s%d", "/dev/video", index);
         return devName;
     }
     char *GetCameraName(int index)
@@ -404,16 +386,11 @@ private:
         int i;
         for (i = 0; i < (int)reqbuf.count; i++)
             munmap (buffers[i].start, buffers[i].length);
-        free(rgb24);
-        rgb24 = NULL;
     }
     int test_device_exist(char *devName)
     {
         struct stat st;
         if (-1 == stat(devName, &st))
-            return -1;
-
-        if (!S_ISCHR (st.st_mode))
             return -1;
 
         return 0;

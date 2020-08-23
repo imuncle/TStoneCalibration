@@ -61,8 +61,10 @@ void single_capture_linux::close_camera()
 {
     last_id = -1;
     capture_thread->stop();
+    capture_thread->quit();
     capture_thread->wait();
     v4l2.StopRun();
+    open_flag = false;
 }
 
 void single_capture_linux::DealCaptureDone(QImage image, int result)
@@ -71,9 +73,7 @@ void single_capture_linux::DealCaptureDone(QImage image, int result)
     //超时代表着VIDIOC_DQBUF会阻塞，直接关闭视频即可
     if(result == -1)
     {
-        capture_thread->stop();
-        capture_thread->wait();
-        v4l2.StopRun();
+        close_camera();
 
         ui->image->clear();
         ui->image->setText("获取设备图像超时！");
@@ -134,6 +134,11 @@ void single_capture_linux::capture()
     q_image.save(filename);
 }
 
+void single_capture_linux::closeEvent ( QCloseEvent *)
+{
+    close_camera();
+}
+
 SingleCaptureThread::SingleCaptureThread()
 {
     stopped = false;
@@ -171,13 +176,6 @@ void SingleCaptureThread::run()
             emit SingleCaptureDone(img, ret);
         }
     }
-}
-
-void single_capture_linux::closeEvent ( QCloseEvent *)
-{
-    capture_thread->stop();
-    capture_thread->wait();
-    v4l2.StopRun();
 }
 
 #endif
