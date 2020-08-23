@@ -8,15 +8,6 @@ CameraCalibration::CameraCalibration(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::CameraCalibration)
 {
-    QFile file("/dev/ttyusb");
-    if (file.exists())
-    {
-        std::cout << "yes" << std::endl;
-    }
-    else
-    {
-        std::cout << "no" << std::endl;
-    }
     ui->setupUi(this);
     setFixedSize(this->width(), this->height());
     ui->addImage->setFlat(true);
