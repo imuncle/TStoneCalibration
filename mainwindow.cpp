@@ -29,6 +29,7 @@ void MainWindow::showIntro()
     a->setFont(font);
     a->setWindowTitle("关于TStoneCalibration");
     a->show();
+    about_initial_flag = true;
 }
 
 void MainWindow::startCameraCalib()
@@ -39,4 +40,19 @@ void MainWindow::startCameraCalib()
     camera_calibration->setFont(font);
     camera_calibration->setWindowTitle("相机标定");
     camera_calibration->show();
+    camera_calibration_flag = true;
+}
+
+void MainWindow::closeEvent(QCloseEvent *)
+{
+    if(about_initial_flag == true)
+    {
+        a->close();
+        delete a;
+    }
+    if(camera_calibration_flag == true)
+    {
+        camera_calibration->close();
+        delete camera_calibration;
+    }
 }

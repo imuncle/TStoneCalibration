@@ -22,10 +22,13 @@ private slots:
     void showIntro();
 
 private:
+    void closeEvent(QCloseEvent *);
     Ui::MainWindow *ui;
     CameraCalibration* camera_calibration;
     QAction *about;
     AboutUs *a;
+    bool about_initial_flag = false;
+    bool camera_calibration_flag = false;
 };
 
 #endif // MAINWINDOW_H

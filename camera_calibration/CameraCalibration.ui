@@ -461,7 +461,7 @@
      <rect>
       <x>640</x>
       <y>0</y>
-      <width>100</width>
+      <width>158</width>
       <height>80</height>
      </rect>
     </property>
@@ -503,6 +503,32 @@
      </property>
      <property name="text">
       <string>双目标定</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="single_undistort">
+     <property name="geometry">
+      <rect>
+       <x>85</x>
+       <y>20</y>
+       <width>89</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>单目纠正</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="double_undistort">
+     <property name="geometry">
+      <rect>
+       <x>85</x>
+       <y>50</y>
+       <width>89</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>双目纠正</string>
      </property>
     </widget>
    </widget>

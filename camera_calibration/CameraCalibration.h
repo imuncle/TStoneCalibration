@@ -27,6 +27,7 @@
 #elif defined(Q_OS_WIN32)
 #include "double_capture.h"
 #endif
+#include "choose_yaml.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class CameraCalibration; }
@@ -84,8 +85,10 @@ private slots:
     void exportParam();
     void distortModeSwitch();
     void receiveFromDialog(QString str);
+    void receiveYamlPath(QString str);
     void chooseImage(QListWidgetItem* item, QListWidgetItem*);
     void reset();
+    void undistortReset();
     void saveUndistort();
     void OpenCamera();
     void DealThreadDone();
@@ -93,6 +96,7 @@ private slots:
 private:
     Ui::CameraCalibration *ui;
     choose_two_dir *d;
+    choose_yaml *chooseYaml;
 #ifdef Q_OS_LINUX
     single_capture_linux *single_c;
     double_capture_linux *double_c;

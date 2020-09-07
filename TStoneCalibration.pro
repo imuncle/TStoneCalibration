@@ -29,6 +29,7 @@ SOURCES += \
     camera_calibration/single_capture_linux.cpp \
     main.cpp \
     camera_calibration/single_capture.cpp \
+    camera_calibration/choose_yaml.cpp \
     mainwindow.cpp
 
 HEADERS += \
@@ -42,6 +43,7 @@ HEADERS += \
     camera_calibration/single_capture.h \
     camera_calibration/single_capture_linux.h \
     camera_calibration/v4l2.hpp \
+    camera_calibration/choose_yaml.h \
     mainwindow.h
 
 FORMS += \
@@ -50,6 +52,7 @@ FORMS += \
     camera_calibration/choose_two_dir.ui \
     camera_calibration/double_capture.ui \
     camera_calibration/single_capture.ui \
+    camera_calibration/choose_yaml.ui \
     mainwindow.ui
 
 INCLUDEPATH += C:/Users/uncle/Desktop/OpenCV/install/include\

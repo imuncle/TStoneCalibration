@@ -36,6 +36,9 @@ CameraCalibration::CameraCalibration(QWidget *parent)
     connect(ui->undistort, SIGNAL(clicked()), this, SLOT(distortModeSwitch()));
     connect(ui->listWidget, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)), this, SLOT(chooseImage(QListWidgetItem*, QListWidgetItem*)));
     connect(ui->double_camera, SIGNAL(toggled(bool)), this, SLOT(reset()));
+    connect(ui->single_camera, SIGNAL(toggled(bool)), this, SLOT(reset()));
+    connect(ui->double_undistort, SIGNAL(toggled(bool)), this, SLOT(undistortReset()));
+    connect(ui->single_undistort, SIGNAL(toggled(bool)), this, SLOT(undistortReset()));
     saveImage = ui->menu->addAction("导出矫正图片");
     font = saveImage->font();
     font.setPixelSize(12);
@@ -52,20 +55,26 @@ CameraCalibration::~CameraCalibration()
 void CameraCalibration::ShowIntro()
 {
     ui->intro->setFixedHeight(100);
-    if(ui->double_camera->isChecked())
+    if(ui->double_camera->isChecked() || ui->double_undistort->isChecked())
     {
         QString str = "点击左上角添加图片";
         str += "\n";
         str += "左右相机图片分别放于两个文件夹";
         str += "\n";
         str += "对应图片名称需一致。";
+        str += "\n";
+        str += "\n";
+        str += "单/双目纠正模式可纠正无棋盘的图片。";
         ui->intro->setText(str);
     }
-    else
+    else if(ui->single_camera->isChecked() || ui->single_undistort->isChecked())
     {
         QString str = "点击左上角添加图片";
         str += "\n";
         str += "15至20张较为适宜";
+        str += "\n";
+        str += "\n";
+        str += "单/双目纠正模式可纠正无棋盘的图片。";
         ui->intro->setText(str);
     }
 }
@@ -137,15 +146,26 @@ void CameraCalibration::saveUndistort()
 {
     if(calibrate_flag == false)
     {
-        QMessageBox::critical(NULL, "错误", "请先标定", QMessageBox::Yes, QMessageBox::Yes);
-        return;
+        if(ui->single_undistort->isChecked() || ui->double_undistort->isChecked())
+        {
+            QMessageBox::warning(this, "警告", "还未获取到相机参数，请点击UNDISTORT按钮加载yaml文件。", QMessageBox::Yes, QMessageBox::Yes);
+            return;
+        }
+        else
+        {
+            QMessageBox::critical(NULL, "错误", "请先标定", QMessageBox::Yes, QMessageBox::Yes);
+            return;
+        }
     }
     QString srcDirPath = QFileDialog::getExistingDirectory(nullptr, "选择保存路径", "./");
     if(srcDirPath.length() <= 0)
         return;
     QTextCodec *code = QTextCodec::codecForName("GB2312");//解决中文路径问题
-    if(ui->double_camera->isChecked())
+    if(ui->double_camera->isChecked() || ui->double_undistort->isChecked())
     {
+        QDir dir;
+        dir.mkdir(srcDirPath+"/left/");
+        dir.mkdir(srcDirPath+"/right/");
         for(unsigned int i = 0; i < stereo_imgs.size(); i++)
         {
             struct Stereo_Img_t img = stereo_imgs[i];
@@ -167,6 +187,12 @@ void CameraCalibration::saveUndistort()
                 cv::fisheye::initUndistortRectifyMap(K2, D2, R2, P2, img_size, CV_16SC2, mapx, mapy);
                 cv::remap(img.right_img, right_dst, mapx, mapy, cv::INTER_LINEAR);
             }
+            QString save_name = srcDirPath + "/left/" + img.left_file_name;
+            std::string str = code->fromUnicode(save_name).data();
+            cv::imwrite(str, left_dst);
+            save_name = srcDirPath + "/right/" + img.left_file_name;
+            str = code->fromUnicode(save_name).data();
+            cv::imwrite(str, right_dst);
             for(int i = 1; i < 10; i++)
             {
                 cv::line(left_dst, cv::Point(0, left_dst.rows*i/10), cv::Point(left_dst.cols-1, left_dst.rows*i/10), cv::Scalar(0,0,255), 2);
@@ -177,8 +203,8 @@ void CameraCalibration::saveUndistort()
             left_dst.convertTo(new_roi, new_roi.type());
             new_roi = combian_img(cv::Rect(img.left_img.cols, 0, img.left_img.cols, img.left_img.rows));
             right_dst.convertTo(new_roi, new_roi.type());
-            QString save_name = srcDirPath + "/" + img.left_file_name;
-            std::string str = code->fromUnicode(save_name).data();
+            save_name = srcDirPath + "/" + img.left_file_name;
+            str = code->fromUnicode(save_name).data();
             cv::imwrite(str, combian_img);
         }
     }
@@ -202,6 +228,31 @@ void CameraCalibration::saveUndistort()
 void CameraCalibration::reset()
 {
     ShowIntro();
+    ui->k_2->setEnabled(true);
+    ui->k_3->setEnabled(true);
+    ui->tangential->setEnabled(true);
+    ui->calibrate->setEnabled(true);
+    ui->export_1->setEnabled(true);
+    chessboard_size = 0;
+    calibrate_flag = false;
+    distort_flag = false;
+    disconnect(ui->listWidget, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)), this, SLOT(chooseImage(QListWidgetItem*, QListWidgetItem*)));
+    ui->listWidget->clear();
+    connect(ui->listWidget, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)), this, SLOT(chooseImage(QListWidgetItem*, QListWidgetItem*)));
+    if(imgs.size() > 0)
+        imgs.clear();
+    if(stereo_imgs.size() > 0)
+        stereo_imgs.clear();
+}
+
+void CameraCalibration::undistortReset()
+{
+    ShowIntro();
+    ui->k_2->setDisabled(true);
+    ui->k_3->setDisabled(true);
+    ui->tangential->setDisabled(true);
+    ui->calibrate->setDisabled(true);
+    ui->export_1->setDisabled(true);
     chessboard_size = 0;
     calibrate_flag = false;
     distort_flag = false;
@@ -310,7 +361,7 @@ void CameraCalibration::chooseImage(QListWidgetItem* item, QListWidgetItem*)
         QImage qimage = Mat2QImage(combian_img);
         ui->Image->setPixmap(QPixmap::fromImage(qimage));
     }
-    else
+    else if(ui->single_camera->isChecked())
     {
         // 单目逻辑同双目
         cv::Mat img;
@@ -371,6 +422,69 @@ void CameraCalibration::chooseImage(QListWidgetItem* item, QListWidgetItem*)
         QImage qimage = Mat2QImage(img);
         ui->Image->setPixmap(QPixmap::fromImage(qimage));
     }
+    else if(ui->double_undistort->isChecked())
+    {
+        // 如果是双目模式
+        struct Stereo_Img_t img = stereo_imgs[id];
+        cv::Mat left_dst = img.left_img.clone();
+        cv::Mat right_dst = img.right_img.clone();
+        if(distort_flag == true)
+        {
+            // 对左右图像进行矫正
+            if(fisheye_flag == false)
+            {
+                cv::Mat mapx, mapy;
+                cv::initUndistortRectifyMap(cameraMatrix, distCoefficients, R1, P1, img_size, CV_16SC2, mapx, mapy);
+                cv::remap(img.left_img, left_dst, mapx, mapy, cv::INTER_LINEAR);
+                cv::initUndistortRectifyMap(cameraMatrix2, distCoefficients2, R2, P2, img_size, CV_16SC2, mapx, mapy);
+                cv::remap(img.right_img, right_dst, mapx, mapy, cv::INTER_LINEAR);
+            }
+            else
+            {
+                cv::Mat mapx, mapy;
+                cv::fisheye::initUndistortRectifyMap(K, D, R1, P1, img_size, CV_16SC2, mapx, mapy);
+                cv::remap(img.left_img, left_dst, mapx, mapy, cv::INTER_LINEAR);
+                cv::fisheye::initUndistortRectifyMap(K2, D2, R2, P2, img_size, CV_16SC2, mapx, mapy);
+                cv::remap(img.right_img, right_dst, mapx, mapy, cv::INTER_LINEAR);
+            }
+            // 绘制横线以观察左右图像极线是否对齐
+            for(int i = 1; i < 10; i++)
+            {
+                cv::line(left_dst, cv::Point(0, left_dst.rows*i/10), cv::Point(left_dst.cols-1, left_dst.rows*i/10), cv::Scalar(0,0,255), 2);
+                cv::line(right_dst, cv::Point(0, right_dst.rows*i/10), cv::Point(right_dst.cols-1, right_dst.rows*i/10), cv::Scalar(0,0,255), 2);
+            }
+        }
+        int height = img.left_img.rows*265/img.left_img.cols;
+        cv::resize(left_dst, left_dst, cv::Size(265, height));
+        cv::resize(right_dst, right_dst, cv::Size(265, height));
+        cv::Mat combian_img = cv::Mat::zeros(cv::Size(530, height), CV_8UC3);
+        cv::Mat new_roi = combian_img(cv::Rect(0, 0, 265, height));
+        left_dst.convertTo(new_roi, new_roi.type());
+        new_roi = combian_img(cv::Rect(265, 0, 265, height));
+        right_dst.convertTo(new_roi, new_roi.type());
+        QImage qimage = Mat2QImage(combian_img);
+        ui->Image->setPixmap(QPixmap::fromImage(qimage));
+    }
+    else
+    {
+        // 单目逻辑同双目
+        cv::Mat img = imgs[id].img.clone();
+        if(distort_flag == true)
+        {
+            cv::Mat dst;
+            if(fisheye_flag == false)
+                cv::undistort(img, dst, cameraMatrix, distCoefficients);
+            else
+                cv::fisheye::undistortImage(img, dst, K, D, K, img.size());
+            img = dst;
+        }
+        if(img.cols > img.rows)
+            cv::resize(img, img, cv::Size(530, img.rows*530/img.cols));
+        else
+            cv::resize(img, img, cv::Size(img.cols*495/img.rows, 495));
+        QImage qimage = Mat2QImage(img);
+        ui->Image->setPixmap(QPixmap::fromImage(qimage));
+    }
 }
 
 // 角点寻找线程结束时的回调函数
@@ -379,6 +493,127 @@ void CameraCalibration::DealThreadDone()
     findcorner_thread->quit();
     findcorner_thread->wait();
     thread_done = true;
+}
+
+void CameraCalibration::receiveYamlPath(QString str)
+{
+    cv::FileStorage fs_read(str.toStdString(), cv::FileStorage::READ);
+    if(ui->single_undistort->isChecked())
+    {
+        if(fs_read["cameraMatrix"].empty() || fs_read["distCoeffs"].empty())
+        {
+            QMessageBox::critical(this, "错误", "YAML文件格式错误", QMessageBox::Yes, QMessageBox::Yes);
+            return;
+        }
+        if(fisheye_flag == false)
+        {
+            fs_read["cameraMatrix"] >> cameraMatrix;
+            fs_read["distCoeffs"] >> distCoefficients;
+            calibrate_flag = true;
+        }
+        else
+        {
+            cv::Mat camera_matrix, Dist;
+            fs_read["cameraMatrix"] >> camera_matrix;
+            fs_read["distCoeffs"] >> Dist;
+            K(0,0) = camera_matrix.at<double>(0,0);
+            K(0,1) = 0;
+            K(0,2) = camera_matrix.at<double>(0,2);
+            K(1,0) = 0;
+            K(1,1) = camera_matrix.at<double>(1,1);
+            K(1,2) = camera_matrix.at<double>(1,2);
+            K(1,0) = 0;
+            K(2,1) = 0;
+            K(2,2) = 1;
+            D[0] = Dist.at<double>(0,0);
+            D[1] = Dist.at<double>(0,1);
+            D[2] = Dist.at<double>(0,2);
+            D[3] = Dist.at<double>(0,3);
+            calibrate_flag = true;
+        }
+    }
+    else
+    {
+        if(fs_read["left_camera_Matrix"].empty() || fs_read["left_camera_distCoeffs"].empty() || fs_read["right_camera_Matrix"].empty() || fs_read["right_camera_distCoeffs"].empty())
+        {
+            QMessageBox::critical(this, "错误", "YAML文件格式错误", QMessageBox::Yes, QMessageBox::Yes);
+            return;
+        }
+        if(fs_read["Rotate_Matrix"].empty() || fs_read["Translate_Matrix"].empty() || fs_read["R1"].empty() || fs_read["R2"].empty() || fs_read["P1"].empty() ||
+                fs_read["P2"].empty() || fs_read["Q"].empty())
+        {
+            QMessageBox::critical(this, "错误", "YAML文件格式错误", QMessageBox::Yes, QMessageBox::Yes);
+            return;
+        }
+        if(fisheye_flag == false)
+        {
+            fs_read["left_camera_Matrix"] >> cameraMatrix;
+            fs_read["left_camera_distCoeffs"] >> distCoefficients;
+            fs_read["right_camera_Matrix"] >> cameraMatrix2;
+            fs_read["right_camera_distCoeffs"] >> distCoefficients2;
+            fs_read["Rotate_Matrix"] >> R;
+            fs_read["Translate_Matrix"] >> T;
+            fs_read["R1"] >> R1;
+            fs_read["R2"] >> R2;
+            fs_read["P1"] >> P1;
+            fs_read["P2"] >> P2;
+            fs_read["Q"] >> Q;
+            if(cameraMatrix.at<double>(0,0) == 0 || cameraMatrix2.at<double>(0,0) == 0)
+            {
+                QMessageBox::critical(this, "错误", "YAML文件格式错误", QMessageBox::Yes, QMessageBox::Yes);
+                return;
+            }
+            calibrate_flag = true;
+        }
+        else
+        {
+            cv::Mat camera_matrix, Dist;
+            fs_read["left_camera_Matrix"] >> camera_matrix;
+            fs_read["left_camera_distCoeffs"] >> Dist;
+            K(0,0) = camera_matrix.at<double>(0,0);
+            K(0,1) = 0;
+            K(0,2) = camera_matrix.at<double>(0,2);
+            K(1,0) = 0;
+            K(1,1) = camera_matrix.at<double>(1,1);
+            K(1,2) = camera_matrix.at<double>(1,2);
+            K(1,0) = 0;
+            K(2,1) = 0;
+            K(2,2) = 1;
+            D[0] = Dist.at<double>(0,0);
+            D[1] = Dist.at<double>(0,1);
+            D[2] = Dist.at<double>(0,2);
+            D[3] = Dist.at<double>(0,3);
+
+            fs_read["right_camera_Matrix"] >> camera_matrix;
+            fs_read["right_camera_distCoeffs"] >> Dist;
+            K2(0,0) = camera_matrix.at<double>(0,0);
+            K2(0,1) = 0;
+            K2(0,2) = camera_matrix.at<double>(0,2);
+            K2(1,0) = 0;
+            K2(1,1) = camera_matrix.at<double>(1,1);
+            K2(1,2) = camera_matrix.at<double>(1,2);
+            K2(1,0) = 0;
+            K2(2,1) = 0;
+            K2(2,2) = 1;
+            D2[0] = Dist.at<double>(0,0);
+            D2[1] = Dist.at<double>(0,1);
+            D2[2] = Dist.at<double>(0,2);
+            D2[3] = Dist.at<double>(0,3);
+            fs_read["Rotate_Matrix"] >> R;
+            fs_read["Translate_Matrix"] >> T;
+            fs_read["R1"] >> R1;
+            fs_read["R2"] >> R2;
+            fs_read["P1"] >> P1;
+            fs_read["P2"] >> P2;
+            fs_read["Q"] >> Q;
+            if(cameraMatrix.at<double>(0,0) == 0 || cameraMatrix2.at<double>(0,0) == 0)
+            {
+                QMessageBox::critical(this, "错误", "YAML文件格式错误", QMessageBox::Yes, QMessageBox::Yes);
+                return;
+            }
+            calibrate_flag = true;
+        }
+    }
 }
 
 // 加载双目图像
@@ -395,123 +630,167 @@ void CameraCalibration::receiveFromDialog(QString str)
     filters << "*.png" << "*.jpg" << "*.jpeg";
     dir.setNameFilters(filters);
     QStringList imagesList = dir.entryList();
-    if(imagesList.length() <= 3)
+    if(ui->double_camera->isChecked())
     {
-        QMessageBox::critical(NULL, "错误", "至少需要四组图片", QMessageBox::Yes, QMessageBox::Yes);
-        return;
-    }
-    QProgressDialog *dialog = new QProgressDialog(tr("检测角点..."),tr("取消"),0,imagesList.length(),this);
-    dialog->setWindowModality(Qt::WindowModal);
-    dialog->setMinimumDuration(0);
-    dialog->setWindowTitle("请稍候");
-    dialog->setValue(0);
-    QFont font = dialog->font();
-    font.setPixelSize(12);
-    dialog->setFont(font);
-    dialog->show();
-    for(int i = 0; i < imagesList.length(); i++)
-    {
-        QString left_file_name = left_src + "/" + imagesList[i];
-        QString right_file_name = right_src + "/" + imagesList[i];
-        cv::Mat right_image = cv::imread(right_file_name.toStdString());
-        if(right_image.empty())
+        if(imagesList.length() <= 3)
         {
-            dialog->setValue(i+1);
-            continue;
-        }
-        cv::Mat left_image = cv::imread(left_file_name.toStdString());
-        if(left_image.cols != right_image.cols || left_image.rows != right_image.rows)
-        {
-            QMessageBox::critical(NULL, "错误", "左右相机图片尺寸不一致", QMessageBox::Yes, QMessageBox::Yes);
-            delete dialog;
+            QMessageBox::critical(NULL, "错误", "至少需要四组图片", QMessageBox::Yes, QMessageBox::Yes);
             return;
         }
-        find_corner_thread_img = left_image;
-        thread_done = false;
-        findcorner_thread->start();
-        while(thread_done == false)
+        QProgressDialog *dialog = new QProgressDialog(tr("检测角点..."),tr("取消"),0,imagesList.length(),this);
+        dialog->setWindowModality(Qt::WindowModal);
+        dialog->setMinimumDuration(0);
+        dialog->setWindowTitle("请稍候");
+        dialog->setValue(0);
+        QFont font = dialog->font();
+        font.setPixelSize(12);
+        dialog->setFont(font);
+        dialog->show();
+        for(int i = 0; i < imagesList.length(); i++)
         {
-            if(dialog->wasCanceled())
+            QString left_file_name = left_src + "/" + imagesList[i];
+            QString right_file_name = right_src + "/" + imagesList[i];
+            cv::Mat right_image = cv::imread(right_file_name.toStdString());
+            if(right_image.empty())
             {
-                DealThreadDone();
+                dialog->setValue(i+1);
+                continue;
+            }
+            cv::Mat left_image = cv::imread(left_file_name.toStdString());
+            if(left_image.cols != right_image.cols || left_image.rows != right_image.rows)
+            {
+                QMessageBox::critical(NULL, "错误", "左右相机图片尺寸不一致", QMessageBox::Yes, QMessageBox::Yes);
                 delete dialog;
                 return;
             }
-            // 强制Windows消息循环，防止程序出现未响应情况
-            QCoreApplication::processEvents();
-        }
-        struct Chessboarder_t left_chess = find_corner_thread_chessboard;
-        // 如果检测到多个棋盘，则剔除该图片
-        if(left_chess.chessboard.size() != 1)
-        {
-            dialog->setValue(i+1);
-            continue;
-        }
-        find_corner_thread_img = right_image;
-        thread_done = false;
-        findcorner_thread->start();
-        while(thread_done == false)
-        {
-            if(dialog->wasCanceled())
+            find_corner_thread_img = left_image;
+            thread_done = false;
+            findcorner_thread->start();
+            while(thread_done == false)
             {
-                DealThreadDone();
-                delete dialog;
-                return;
-            }
-            QCoreApplication::processEvents();
-        }
-        struct Chessboarder_t right_chess = find_corner_thread_chessboard;
-        // 如果检测到多个棋盘，则剔除该图片
-        if(right_chess.chessboard.size() != 1)
-        {
-            dialog->setValue(i+1);
-            continue;
-        }
-        // 如果左右图片检测到的棋盘尺寸不对，则剔除该组图片
-        if(left_chess.chessboard[0].rows != right_chess.chessboard[0].rows ||
-                left_chess.chessboard[0].cols != right_chess.chessboard[0].cols)
-        {
-            dialog->setValue(i+1);
-            continue;
-        }
-        // 缓存图片及角点
-        struct Stereo_Img_t img_;
-        img_.left_img = left_image;
-        img_.right_img = right_image;
-        img_.left_file_name = imagesList[i];
-        img_.right_file_name = imagesList[i];
-        for (unsigned int j = 0; j < left_chess.chessboard.size(); j++)
-        {
-            for (int u = 0; u < left_chess.chessboard[j].rows; u++)
-            {
-                for (int v = 0; v < left_chess.chessboard[j].cols; v++)
+                if(dialog->wasCanceled())
                 {
-                    img_.left_img_points.push_back(left_chess.corners.p[left_chess.chessboard[j].at<uint16_t>(u, v)]);
-                    img_.world_points.push_back(cv::Point3f(u*chessboard_size, v*chessboard_size, 0));
-                    img_.right_img_points.push_back(right_chess.corners.p[right_chess.chessboard[j].at<uint16_t>(u, v)]);
+                    DealThreadDone();
+                    delete dialog;
+                    return;
+                }
+                // 强制Windows消息循环，防止程序出现未响应情况
+                QCoreApplication::processEvents();
+            }
+            struct Chessboarder_t left_chess = find_corner_thread_chessboard;
+            // 如果检测到多个棋盘，则剔除该图片
+            if(left_chess.chessboard.size() != 1)
+            {
+                dialog->setValue(i+1);
+                continue;
+            }
+            find_corner_thread_img = right_image;
+            thread_done = false;
+            findcorner_thread->start();
+            while(thread_done == false)
+            {
+                if(dialog->wasCanceled())
+                {
+                    DealThreadDone();
+                    delete dialog;
+                    return;
+                }
+                QCoreApplication::processEvents();
+            }
+            struct Chessboarder_t right_chess = find_corner_thread_chessboard;
+            // 如果检测到多个棋盘，则剔除该图片
+            if(right_chess.chessboard.size() != 1)
+            {
+                dialog->setValue(i+1);
+                continue;
+            }
+            // 如果左右图片检测到的棋盘尺寸不对，则剔除该组图片
+            if(left_chess.chessboard[0].rows != right_chess.chessboard[0].rows ||
+                    left_chess.chessboard[0].cols != right_chess.chessboard[0].cols)
+            {
+                dialog->setValue(i+1);
+                continue;
+            }
+            // 缓存图片及角点
+            struct Stereo_Img_t img_;
+            img_.left_img = left_image;
+            img_.right_img = right_image;
+            img_.left_file_name = imagesList[i];
+            img_.right_file_name = imagesList[i];
+            for (unsigned int j = 0; j < left_chess.chessboard.size(); j++)
+            {
+                for (int u = 0; u < left_chess.chessboard[j].rows; u++)
+                {
+                    for (int v = 0; v < left_chess.chessboard[j].cols; v++)
+                    {
+                        img_.left_img_points.push_back(left_chess.corners.p[left_chess.chessboard[j].at<uint16_t>(u, v)]);
+                        img_.world_points.push_back(cv::Point3f(u*chessboard_size, v*chessboard_size, 0));
+                        img_.right_img_points.push_back(right_chess.corners.p[right_chess.chessboard[j].at<uint16_t>(u, v)]);
+                    }
                 }
             }
+            stereo_imgs.push_back(img_);
+            img_size = left_image.size();
+            int img_height = left_image.rows*90/left_image.cols;
+            cv::resize(left_image, left_image, cv::Size(90, img_height));
+            cv::resize(right_image, right_image, cv::Size(90, img_height));
+            cv::Mat combian_img = cv::Mat::zeros(cv::Size(180, img_height), CV_8UC3);
+            cv::Mat new_roi = combian_img(cv::Rect(0, 0, 90, img_height));
+            left_image.convertTo(new_roi, new_roi.type());
+            new_roi = combian_img(cv::Rect(90, 0, 90, img_height));
+            right_image.convertTo(new_roi, new_roi.type());
+            QPixmap pixmap = QPixmap::fromImage(Mat2QImage(combian_img));
+            QListWidgetItem* temp = new QListWidgetItem();
+            temp->setSizeHint(QSize(220, img_height));
+            temp->setIcon(QIcon(pixmap));
+            temp->setText(imagesList[i]);
+            ui->listWidget->addItem(temp);
+            ui->listWidget->setIconSize(QSize(180, img_height));
+            dialog->setValue(i+1);
         }
-        stereo_imgs.push_back(img_);
-        img_size = left_image.size();
-        int img_height = left_image.rows*90/left_image.cols;
-        cv::resize(left_image, left_image, cv::Size(90, img_height));
-        cv::resize(right_image, right_image, cv::Size(90, img_height));
-        cv::Mat combian_img = cv::Mat::zeros(cv::Size(180, img_height), CV_8UC3);
-        cv::Mat new_roi = combian_img(cv::Rect(0, 0, 90, img_height));
-        left_image.convertTo(new_roi, new_roi.type());
-        new_roi = combian_img(cv::Rect(90, 0, 90, img_height));
-        right_image.convertTo(new_roi, new_roi.type());
-        QPixmap pixmap = QPixmap::fromImage(Mat2QImage(combian_img));
-        QListWidgetItem* temp = new QListWidgetItem();
-        temp->setSizeHint(QSize(220, img_height));
-        temp->setIcon(QIcon(pixmap));
-        temp->setText(imagesList[i]);
-        ui->listWidget->addItem(temp);
-        ui->listWidget->setIconSize(QSize(180, img_height));
-        dialog->setValue(i+1);
+        delete dialog;
     }
-    delete dialog;
+    else if(ui->double_undistort->isChecked())
+    {
+        for(int i = 0; i < imagesList.length(); i++)
+        {
+            QString left_file_name = left_src + "/" + imagesList[i];
+            QString right_file_name = right_src + "/" + imagesList[i];
+            cv::Mat right_image = cv::imread(right_file_name.toStdString());
+            if(right_image.empty())
+            {
+                continue;
+            }
+            cv::Mat left_image = cv::imread(left_file_name.toStdString());
+            if(left_image.cols != right_image.cols || left_image.rows != right_image.rows)
+            {
+                QMessageBox::critical(NULL, "错误", "左右相机图片尺寸不一致", QMessageBox::Yes, QMessageBox::Yes);
+                return;
+            }
+            struct Stereo_Img_t img_;
+            img_.left_img = left_image;
+            img_.right_img = right_image;
+            img_.left_file_name = imagesList[i];
+            img_.right_file_name = imagesList[i];
+            stereo_imgs.push_back(img_);
+            img_size = left_image.size();
+            int img_height = left_image.rows*90/left_image.cols;
+            cv::resize(left_image, left_image, cv::Size(90, img_height));
+            cv::resize(right_image, right_image, cv::Size(90, img_height));
+            cv::Mat combian_img = cv::Mat::zeros(cv::Size(180, img_height), CV_8UC3);
+            cv::Mat new_roi = combian_img(cv::Rect(0, 0, 90, img_height));
+            left_image.convertTo(new_roi, new_roi.type());
+            new_roi = combian_img(cv::Rect(90, 0, 90, img_height));
+            right_image.convertTo(new_roi, new_roi.type());
+            QPixmap pixmap = QPixmap::fromImage(Mat2QImage(combian_img));
+            QListWidgetItem* temp = new QListWidgetItem();
+            temp->setSizeHint(QSize(220, img_height));
+            temp->setIcon(QIcon(pixmap));
+            temp->setText(imagesList[i]);
+            ui->listWidget->addItem(temp);
+            ui->listWidget->setIconSize(QSize(180, img_height));
+        }
+    }
 }
 
 // 鱼眼相机切换
@@ -535,6 +814,20 @@ void CameraCalibration::fisheyeModeSwitch(int state)
 // 畸变矫正切换
 void CameraCalibration::distortModeSwitch()
 {
+    if(ui->single_undistort->isChecked() || ui->double_undistort->isChecked())
+    {
+        if(calibrate_flag == false)
+        {
+            chooseYaml = new choose_yaml();
+            chooseYaml->setWindowTitle("选择相机参数文件");
+            QFont font = chooseYaml->font();
+            font.setPixelSize(12);
+            chooseYaml->setFont(font);
+            chooseYaml->show();
+            connect(chooseYaml, SIGNAL(SendSignal(QString)), this, SLOT(receiveYamlPath(QString)));
+            return;
+        }
+    }
     static int cnt = 0;
     cnt++;
     if(cnt%2 == 1)
@@ -582,7 +875,7 @@ QImage CameraCalibration::Mat2QImage(cv::Mat cvImg)
 void CameraCalibration::addImage()
 {
     HiddenIntro();
-    if(ui->double_camera->isChecked())
+    if(ui->double_camera->isChecked() || ui->double_undistort->isChecked())
     {
         d = new choose_two_dir();
         d->setWindowTitle("选择图片文件夹");
@@ -593,82 +886,109 @@ void CameraCalibration::addImage()
         connect(d, SIGNAL(SendSignal(QString)), this, SLOT(receiveFromDialog(QString)));
         return;
     }
-    if(chessboard_size == 0)
+    else if(ui->single_camera->isChecked())
     {
-        bool ok;
-        chessboard_size = QInputDialog::getDouble(this,tr("角点间距"),tr("请输入角点间距(mm)"),20,0,1000,2,&ok);
-        if(!ok)
+        if(chessboard_size == 0)
         {
-            chessboard_size = 0;
-            return;
-        }
-    }
-    QStringList path_list = QFileDialog::getOpenFileNames(this, tr("选择图片"), tr("./"), tr("图片文件(*.jpg *.png *.pgm);;所有文件(*.*);"));
-    QProgressDialog *dialog = new QProgressDialog(tr("检测角点..."),tr("取消"),0,path_list.size(),this);
-    dialog->setWindowModality(Qt::WindowModal);
-    dialog->setMinimumDuration(0);
-    dialog->setWindowTitle("请稍候");
-    dialog->setValue(0);
-    QFont font = dialog->font();
-    font.setPixelSize(12);
-    dialog->setFont(font);
-    dialog->show();
-    for(int i = 0; i < path_list.size(); i++)
-    {
-        QFileInfo file = QFileInfo(path_list[i]);
-        QString file_name = file.fileName();
-        cv::Mat img = cv::imread(path_list[i].toStdString());
-        find_corner_thread_img = img;
-        thread_done = false;
-        findcorner_thread->start();
-        while(thread_done == false)
-        {
-            if(dialog->wasCanceled())
+            bool ok;
+            chessboard_size = QInputDialog::getDouble(this,tr("角点间距"),tr("请输入角点间距(mm)"),20,0,1000,2,&ok);
+            if(!ok)
             {
-                DealThreadDone();
-                delete dialog;
+                chessboard_size = 0;
                 return;
             }
-            QCoreApplication::processEvents();
         }
-        struct Chessboarder_t chess = find_corner_thread_chessboard;
-        if(chess.chessboard.size() != 1)
+        QStringList path_list = QFileDialog::getOpenFileNames(this, tr("选择图片"), tr("./"), tr("图片文件(*.jpg *.png *.pgm);;所有文件(*.*);"));
+        QProgressDialog *dialog = new QProgressDialog(tr("检测角点..."),tr("取消"),0,path_list.size(),this);
+        dialog->setWindowModality(Qt::WindowModal);
+        dialog->setMinimumDuration(0);
+        dialog->setWindowTitle("请稍候");
+        dialog->setValue(0);
+        QFont font = dialog->font();
+        font.setPixelSize(12);
+        dialog->setFont(font);
+        dialog->show();
+        for(int i = 0; i < path_list.size(); i++)
         {
-            dialog->setValue(i+1);
-            continue;
-        }
-        struct Img_t img_;
-        img_.img = img;
-        img_.file_name = file_name;
-        std::vector<cv::Point2f> img_p;
-        std::vector<cv::Point3f> world_p;
-        for (unsigned int j = 0; j < chess.chessboard.size(); j++)
-        {
-            for (int u = 0; u < chess.chessboard[j].rows; u++)
+            QFileInfo file = QFileInfo(path_list[i]);
+            QString file_name = file.fileName();
+            cv::Mat img = cv::imread(path_list[i].toStdString());
+            find_corner_thread_img = img;
+            thread_done = false;
+            findcorner_thread->start();
+            while(thread_done == false)
             {
-                for (int v = 0; v < chess.chessboard[j].cols; v++)
+                if(dialog->wasCanceled())
                 {
-                    img_p.push_back(chess.corners.p[chess.chessboard[j].at<uint16_t>(u, v)]);
-                    world_p.push_back(cv::Point3f(u*chessboard_size, v*chessboard_size, 0));
+                    DealThreadDone();
+                    delete dialog;
+                    return;
+                }
+                QCoreApplication::processEvents();
+            }
+            struct Chessboarder_t chess = find_corner_thread_chessboard;
+            if(chess.chessboard.size() != 1)
+            {
+                dialog->setValue(i+1);
+                continue;
+            }
+            struct Img_t img_;
+            img_.img = img;
+            img_.file_name = file_name;
+            std::vector<cv::Point2f> img_p;
+            std::vector<cv::Point3f> world_p;
+            for (unsigned int j = 0; j < chess.chessboard.size(); j++)
+            {
+                for (int u = 0; u < chess.chessboard[j].rows; u++)
+                {
+                    for (int v = 0; v < chess.chessboard[j].cols; v++)
+                    {
+                        img_p.push_back(chess.corners.p[chess.chessboard[j].at<uint16_t>(u, v)]);
+                        world_p.push_back(cv::Point3f(u*chessboard_size, v*chessboard_size, 0));
+                    }
                 }
             }
+            img_.img_points = img_p;
+            img_.world_points = world_p;
+            imgs.push_back(img_);
+            img_size = img.size();
+            int img_height = img.rows*124/img.cols;
+            cv::resize(img, img, cv::Size(124, img_height));
+            QPixmap pixmap = QPixmap::fromImage(Mat2QImage(img));
+            QListWidgetItem* temp = new QListWidgetItem();
+            temp->setSizeHint(QSize(200, img_height));
+            temp->setIcon(QIcon(pixmap));
+            temp->setText(file_name);
+            ui->listWidget->addItem(temp);
+            ui->listWidget->setIconSize(QSize(124, img_height));
+            dialog->setValue(i+1);
         }
-        img_.img_points = img_p;
-        img_.world_points = world_p;
-        imgs.push_back(img_);
-        img_size = img.size();
-        int img_height = img.rows*124/img.cols;
-        cv::resize(img, img, cv::Size(124, img_height));
-        QPixmap pixmap = QPixmap::fromImage(Mat2QImage(img));
-        QListWidgetItem* temp = new QListWidgetItem();
-        temp->setSizeHint(QSize(200, img_height));
-        temp->setIcon(QIcon(pixmap));
-        temp->setText(file_name);
-        ui->listWidget->addItem(temp);
-        ui->listWidget->setIconSize(QSize(124, img_height));
-        dialog->setValue(i+1);
+        delete dialog;
     }
-    delete dialog;
+    else if(ui->single_undistort->isChecked())
+    {
+        QStringList path_list = QFileDialog::getOpenFileNames(this, tr("选择图片"), tr("./"), tr("图片文件(*.jpg *.png *.pgm);;所有文件(*.*);"));
+        for(int i = 0; i < path_list.size(); i++)
+        {
+            QFileInfo file = QFileInfo(path_list[i]);
+            QString file_name = file.fileName();
+            cv::Mat img = cv::imread(path_list[i].toStdString());
+            img_size = img.size();
+            Img_t single_img;
+            single_img.img = img;
+            single_img.file_name = file_name;
+            imgs.push_back(single_img);
+            int img_height = img.rows*124/img.cols;
+            cv::resize(img, img, cv::Size(124, img_height));
+            QPixmap pixmap = QPixmap::fromImage(Mat2QImage(img));
+            QListWidgetItem* temp = new QListWidgetItem();
+            temp->setSizeHint(QSize(200, img_height));
+            temp->setIcon(QIcon(pixmap));
+            temp->setText(file_name);
+            ui->listWidget->addItem(temp);
+            ui->listWidget->setIconSize(QSize(124, img_height));
+        }
+    }
 }
 
 // 删除选中的图片
@@ -699,6 +1019,16 @@ void CameraCalibration::deleteImage()
 // 相机标定
 void CameraCalibration::calibrate()
 {
+    if(chessboard_size == 0)
+    {
+        bool ok;
+        chessboard_size = QInputDialog::getDouble(this,tr("角点间距"),tr("请输入角点间距(mm)"),20,0,1000,2,&ok);
+        if(!ok)
+        {
+            chessboard_size = 0;
+            return;
+        }
+    }
     if(!ui->double_camera->isChecked())
     {
         // 单目标定
