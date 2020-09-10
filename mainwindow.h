@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "camera_calibration/CameraCalibration.h"
+#include "hand_eye_calibration/HandEyeCalibration.h"
 #include "AboutUs.h"
 
 namespace Ui {
@@ -19,16 +20,15 @@ public:
 
 private slots:
     void startCameraCalib();
+    void startHandEyeCalib();
     void showIntro();
 
 private:
-    void closeEvent(QCloseEvent *);
     Ui::MainWindow *ui;
     CameraCalibration* camera_calibration;
+    HandEyeCalibration* hand_eye_calibration;
     QAction *about;
     AboutUs *a;
-    bool about_initial_flag = false;
-    bool camera_calibration_flag = false;
 };
 
 #endif // MAINWINDOW_H
