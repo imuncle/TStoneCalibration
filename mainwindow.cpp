@@ -9,11 +9,14 @@ MainWindow::MainWindow(QWidget *parent) :
     setFixedSize(this->width(), this->height());
     ui->CameraCalib->setFlat(true);
     connect(ui->CameraCalib, SIGNAL(clicked()), this, SLOT(startCameraCalib()));
+    ui->HandEyeCalib->setFlat(true);
+    connect(ui->HandEyeCalib, SIGNAL(clicked()), this, SLOT(startHandEyeCalib()));
     about = ui->menu->addAction("关于");
     QFont font = about->font();
     font.setPixelSize(12);
     about->setFont(font);
     connect(about, SIGNAL(triggered()), this, SLOT(showIntro()));
+
 }
 
 MainWindow::~MainWindow()
@@ -29,7 +32,6 @@ void MainWindow::showIntro()
     a->setFont(font);
     a->setWindowTitle("关于TStoneCalibration");
     a->show();
-    about_initial_flag = true;
 }
 
 void MainWindow::startCameraCalib()
@@ -40,19 +42,14 @@ void MainWindow::startCameraCalib()
     camera_calibration->setFont(font);
     camera_calibration->setWindowTitle("相机标定");
     camera_calibration->show();
-    camera_calibration_flag = true;
 }
 
-void MainWindow::closeEvent(QCloseEvent *)
+void MainWindow::startHandEyeCalib()
 {
-    if(about_initial_flag == true)
-    {
-        a->close();
-        delete a;
-    }
-    if(camera_calibration_flag == true)
-    {
-        camera_calibration->close();
-        delete camera_calibration;
-    }
+    hand_eye_calibration = new HandEyeCalibration();
+    QFont font = hand_eye_calibration->font();
+    font.setPixelSize(12);
+    hand_eye_calibration->setFont(font);
+    hand_eye_calibration->setWindowTitle("手眼标定");
+    hand_eye_calibration->show();
 }
