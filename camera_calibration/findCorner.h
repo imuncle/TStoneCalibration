@@ -34,7 +34,8 @@ struct Chessboarder_t
 };
 
 struct Chessboarder_t findCorner(cv::Mat img, int sigma);
-void secondDerivCornerMetric(cv::Mat img, int sigma, cv::Mat *cxy, cv::Mat *Ixy);
+void secondDerivCornerMetric(cv::Mat I, int sigma, cv::Mat* cxy, cv::Mat* c45, cv::Mat* Ix, cv::Mat* Iy, cv::Mat* Ixy, cv::Mat* I_45_45);
+std::vector<cv::Point2d> nonMaximumSuppression(cv::Mat img, int n, double tau, int margin);
 struct Corner_t getOrientations(cv::Mat img_angle, cv::Mat img_weight, struct Corner_t corners, int r);
 void edgeOrientations(cv::Mat img_angle, cv::Mat img_weight, cv::Point2d* v1, cv::Point2d* v2);
 std::vector<cv::Point3d> findModesMeanShift(cv::Mat hist, int sigma);

@@ -646,17 +646,20 @@ void CameraCalibration::receiveFromDialog(QString str)
         font.setPixelSize(12);
         dialog->setFont(font);
         dialog->show();
+        QTextCodec *code = QTextCodec::codecForName("GB2312");//解决中文路径问题
         for(int i = 0; i < imagesList.length(); i++)
         {
             QString left_file_name = left_src + "/" + imagesList[i];
             QString right_file_name = right_src + "/" + imagesList[i];
-            cv::Mat right_image = cv::imread(right_file_name.toStdString());
+            std::string str = code->fromUnicode(right_file_name).data();
+            cv::Mat right_image = cv::imread(str);
             if(right_image.empty())
             {
                 dialog->setValue(i+1);
                 continue;
             }
-            cv::Mat left_image = cv::imread(left_file_name.toStdString());
+            str = code->fromUnicode(left_file_name).data();
+            cv::Mat left_image = cv::imread(str);
             if(left_image.cols != right_image.cols || left_image.rows != right_image.rows)
             {
                 QMessageBox::critical(NULL, "错误", "左右相机图片尺寸不一致", QMessageBox::Yes, QMessageBox::Yes);
@@ -752,16 +755,19 @@ void CameraCalibration::receiveFromDialog(QString str)
     }
     else if(ui->double_undistort->isChecked())
     {
+        QTextCodec *code = QTextCodec::codecForName("GB2312");//解决中文路径问题
         for(int i = 0; i < imagesList.length(); i++)
         {
             QString left_file_name = left_src + "/" + imagesList[i];
             QString right_file_name = right_src + "/" + imagesList[i];
-            cv::Mat right_image = cv::imread(right_file_name.toStdString());
+            std::string str = code->fromUnicode(right_file_name).data();
+            cv::Mat right_image = cv::imread(str);
             if(right_image.empty())
             {
                 continue;
             }
-            cv::Mat left_image = cv::imread(left_file_name.toStdString());
+            str = code->fromUnicode(left_file_name).data();
+            cv::Mat left_image = cv::imread(str);
             if(left_image.cols != right_image.cols || left_image.rows != right_image.rows)
             {
                 QMessageBox::critical(NULL, "错误", "左右相机图片尺寸不一致", QMessageBox::Yes, QMessageBox::Yes);
@@ -908,11 +914,13 @@ void CameraCalibration::addImage()
         font.setPixelSize(12);
         dialog->setFont(font);
         dialog->show();
+        QTextCodec *code = QTextCodec::codecForName("GB2312");//解决中文路径问题
         for(int i = 0; i < path_list.size(); i++)
         {
             QFileInfo file = QFileInfo(path_list[i]);
             QString file_name = file.fileName();
-            cv::Mat img = cv::imread(path_list[i].toStdString());
+            std::string str = code->fromUnicode(path_list[i]).data();
+            cv::Mat img = cv::imread(str);
             find_corner_thread_img = img;
             thread_done = false;
             findcorner_thread->start();
@@ -968,11 +976,13 @@ void CameraCalibration::addImage()
     else if(ui->single_undistort->isChecked())
     {
         QStringList path_list = QFileDialog::getOpenFileNames(this, tr("选择图片"), tr("./"), tr("图片文件(*.jpg *.png *.pgm);;所有文件(*.*);"));
+        QTextCodec *code = QTextCodec::codecForName("GB2312");//解决中文路径问题
         for(int i = 0; i < path_list.size(); i++)
         {
             QFileInfo file = QFileInfo(path_list[i]);
             QString file_name = file.fileName();
-            cv::Mat img = cv::imread(path_list[i].toStdString());
+            std::string str = code->fromUnicode(path_list[i]).data();
+            cv::Mat img = cv::imread(str);
             img_size = img.size();
             Img_t single_img;
             single_img.img = img;
@@ -1333,7 +1343,6 @@ void CameraCalibration::calibrate()
                                   img_size, R, T,
                                   R1, R2, P1, P2, Q, 0, img_size);
         }
-        D = D2;
         cv::imshow("error", error_plot);
     }
     calibrate_flag = true;
@@ -1394,7 +1403,7 @@ void CameraCalibration::exportParam()
             camera_matrix.at<double>(1,2) = K(1,2);
             camera_matrix.at<double>(2,2) = 1;
             cv::Mat Dist = (cv::Mat_<double>(1,4) << D[0], D[1], D[2], D[3]);
-            fs_write << "cameraMatrix" << camera_matrix << "disCoeffs" << Dist;
+            fs_write << "cameraMatrix" << camera_matrix << "distCoeffs" << Dist;
         }
         fs_write << "average_reprojection_err" << error1;
     }
