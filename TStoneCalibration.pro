@@ -60,23 +60,16 @@ FORMS += \
     hand_eye_calibration/HandEyeCalibration.ui \
     mainwindow.ui
 
-INCLUDEPATH += C:/Users/uncle/Desktop/OpenCV/install/include\
-                            C:/Users/uncle/Desktop/OpenCV/install/include/opencv\
-                            C:/Users/uncle/Desktop/OpenCV/install/include/opencv2
+INCLUDEPATH += C:/Users/uncle/Desktop/OpenCV_3.2.0/include\
+                            C:/Users/uncle/Desktop/OpenCV_3.2.0/include/opencv\
+                            C:/Users/uncle/Desktop/OpenCV_3.2.0/include/opencv2
 
-LIBS += C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_core310.dll.a\
-             C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_calib3d310.dll.a\
-             C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_highgui310.dll.a\
-             C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_imgcodecs310.dll.a\
-             C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_imgproc310.dll.a\
-             C:/Users/uncle/Desktop/OpenCV/install/x86/mingw/lib/libopencv_features2d310.dll.a
-
-#    C:/opencv/build/x86/mingw/lib/libopencv_core310.dll.a\
-#    C:/opencv/build/x86/mingw/lib/libopencv_calib3d310.dll.a\
-#    C:/opencv/build/x86/mingw/lib/libopencv_highgui310.dll.a\
-#    C:/opencv/build/x86/mingw/lib/libopencv_imgcodecs310.dll.a\
-#    C:/opencv/build/x86/mingw/lib/libopencv_imgproc310.dll.a\
-#    C:/opencv/build/x86/mingw/lib/libopencv_features2d310.dll.a
+LIBS += C:/Users/uncle/Desktop/OpenCV_3.2.0/x64/mingw/lib/libopencv_core320.dll.a\
+             C:/Users/uncle/Desktop/OpenCV_3.2.0/x64/mingw/lib/libopencv_calib3d320.dll.a\
+             C:/Users/uncle/Desktop/OpenCV_3.2.0/x64/mingw/lib/libopencv_highgui320.dll.a\
+             C:/Users/uncle/Desktop/OpenCV_3.2.0/x64/mingw/lib/libopencv_imgcodecs320.dll.a\
+             C:/Users/uncle/Desktop/OpenCV_3.2.0/x64/mingw/lib/libopencv_imgproc320.dll.a\
+             C:/Users/uncle/Desktop/OpenCV_3.2.0/x64/mingw/lib/libopencv_features2d320.dll.a
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

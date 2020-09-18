@@ -306,11 +306,11 @@ void CameraCalibration::chooseImage(QListWidgetItem* item, QListWidgetItem*)
             // 非矫正模式下显示角点位置
             for(unsigned int i = 0; i < img.left_img_points.size(); i++)
             {
-                cv::circle(left_dst, img.left_img_points[i], 10, cv::Scalar(0,0,255), 2);
+                cv::circle(left_dst, img.left_img_points[i], 5, cv::Scalar(0,0,255), 2);
             }
             for(unsigned int i = 0; i < img.right_img_points.size(); i++)
             {
-                cv::circle(right_dst, img.right_img_points[i], 10, cv::Scalar(0,0,255), 2);
+                cv::circle(right_dst, img.right_img_points[i], 5, cv::Scalar(0,0,255), 2);
             }
             if(calibrate_flag == true)
             {
@@ -378,7 +378,7 @@ void CameraCalibration::chooseImage(QListWidgetItem* item, QListWidgetItem*)
         fish_tvecs = imgs[id].fish_tvec;
         for(unsigned int i = 0; i < corners.size(); i++)
         {
-            cv::circle(img, corners[i], 10, cv::Scalar(0,0,255), 2);
+            cv::circle(img, corners[i], 5, cv::Scalar(0,0,255), 2);
         }
         if(calibrate_flag == true)
         {
