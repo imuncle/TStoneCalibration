@@ -56,7 +56,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;产品： TStoneCalibration&lt;/p&gt;&lt;p&gt;版本： 1.2.6&lt;/p&gt;&lt;p&gt;开发： 基于&lt;a href=&quot;https://www.qt.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Qt&lt;/span&gt;&lt;/a&gt;和开源项目&lt;a href=&quot;https://opencv.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;OpenCV&lt;/span&gt;&lt;/a&gt;开发&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;产品： TStoneCalibration&lt;/p&gt;&lt;p&gt;版本： 1.3.0&lt;/p&gt;&lt;p&gt;开发： 基于&lt;a href=&quot;https://www.qt.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Qt&lt;/span&gt;&lt;/a&gt;和开源项目&lt;a href=&quot;https://opencv.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;OpenCV&lt;/span&gt;&lt;/a&gt;开发&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -93,7 +93,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;实验室官网： &lt;a href=&quot;http://ri.cuhk.edu.hk/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://ri.cuhk.edu.hk/&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;联系我们：	big.uncle@foxmail.com&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;Copyright © 2020 CUHK CURI Embedded AI Group&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;实验室官网： &lt;a href=&quot;http://ri.cuhk.edu.hk/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://ri.cuhk.edu.hk/&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;联系我们：	big.uncle@foxmail.com&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;Copyright © 2021 CUHK CURI Embedded AI Group&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

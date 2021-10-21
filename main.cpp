@@ -1,10 +1,10 @@
-#include "mainwindow.h"
+#include "CameraCalibration.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    MainWindow w;
+    CameraCalibration w;
     QFont font = w.font();
     font.setPixelSize(12);
     w.setFont(font);

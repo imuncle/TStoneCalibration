@@ -7,6 +7,5 @@
         <file>undistort.png</file>
         <file>capture.png</file>
         <file>camera.png</file>
-        <file>../../icon.ico</file>
     </qresource>
 </RCC>

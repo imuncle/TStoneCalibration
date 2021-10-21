@@ -41,7 +41,7 @@ void choose_two_dir::cancel()
 
 void choose_two_dir::choose_left_dir()
 {
-    QString srcDirPath = QFileDialog::getExistingDirectory(nullptr, "Choose Directory", "./");
+    QString srcDirPath = QFileDialog::getExistingDirectory(this, "Choose Directory", "./", QFileDialog::ShowDirsOnly);
     if(srcDirPath.isEmpty())
     {
         return;
@@ -51,7 +51,7 @@ void choose_two_dir::choose_left_dir()
 
 void choose_two_dir::choose_right_dir()
 {
-    QString srcDirPath = QFileDialog::getExistingDirectory(nullptr, "Choose Directory", "./");
+    QString srcDirPath = QFileDialog::getExistingDirectory(this, "Choose Directory", "./", QFileDialog::ShowDirsOnly);
     if(srcDirPath.isEmpty())
     {
         return;
